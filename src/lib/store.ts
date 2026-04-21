@@ -20,6 +20,15 @@ export type Reservation = {
   preorder?: string[];
   status: "yangi" | "tasdiqlangan" | "bekor";
   createdAt: number;
+  tableId?: string; // assigned on confirmation
+};
+
+export type Table = {
+  id: string;
+  branchId: string;
+  name: string;       // "Stol 1"
+  capacity?: number;  // how many guests it fits
+  note?: string;      // optional description
 };
 
 export type SiteSettings = {
@@ -36,21 +45,24 @@ export type SiteSettings = {
   heroSubtitle: string;
 };
 
-const RES_KEY = "kuddus.reservations";
-const DISH_KEY = "kuddus.dishes";
-const BRANCH_KEY = "kuddus.branches";
-const SETTINGS_KEY = "kuddus.settings";
-const DATA_EVENT = "kuddus:data";
+// Keys are namespaced with `v2` so existing tester localStorage from the
+// previous "Kuddus Steak" build doesn't shadow the new defaults.
+const RES_KEY = "zr.v2.reservations";
+const DISH_KEY = "zr.v2.dishes";
+const BRANCH_KEY = "zr.v2.branches";
+const SETTINGS_KEY = "zr.v2.settings";
+const TABLES_KEY = "zr.v2.tables";
+const DATA_EVENT = "zr:data";
 
 const defaultSettings: SiteSettings = {
-  name: "Kuddus Steak",
-  tagline: "Olovda tug'ilgan ta'm. 2014-yildan beri har bir bo'lak — san'at asari.",
+  name: "Ziyodullo Restaurant",
+  tagline: "Olovda tug'ilgan ta'm. Har bir bo'lak — san'at asari.",
   phone: "+998 71 200 14 14",
-  email: "info@kuddus-steak.uz",
+  email: "info@ziyodullo-restaurant.uz",
   address: "Toshkent, Amir Temur 107",
   hours: "Har kuni 11:00 — 00:00",
-  instagram: "https://instagram.com/kuddussteak",
-  telegram: "https://t.me/kuddussteak",
+  instagram: "https://instagram.com/ziyodullo.restaurant",
+  telegram: "https://t.me/ziyodullo_restaurant",
   heroPoster:
     "https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=1600&q=80",
   heroTitle: "Olovda Tug'ilgan Ta'm",
@@ -157,6 +169,40 @@ export function resetBranches() {
   write(BRANCH_KEY, defaultBranches);
 }
 
+/* ────────────── TABLES ────────────── */
+function defaultTablesFor(branchId: string): Table[] {
+  // Seed 8 tables per branch with varied capacities
+  const capacities = [2, 2, 4, 4, 4, 6, 6, 8];
+  return capacities.map((cap, i) => ({
+    id: `${branchId}-t${i + 1}`,
+    branchId,
+    name: `Stol ${i + 1}`,
+    capacity: cap,
+    note: i === 7 ? "VIP" : "",
+  }));
+}
+
+export function getTables(): Table[] {
+  const raw = localStorage.getItem(TABLES_KEY);
+  if (raw) {
+    try {
+      return JSON.parse(raw);
+    } catch {}
+  }
+  const seed = getBranches().flatMap((b) => defaultTablesFor(b.id));
+  localStorage.setItem(TABLES_KEY, JSON.stringify(seed));
+  return seed;
+}
+
+export function saveTables(t: Table[]) {
+  write(TABLES_KEY, t);
+}
+
+export function resetTables() {
+  const seed = getBranches().flatMap((b) => defaultTablesFor(b.id));
+  write(TABLES_KEY, seed);
+}
+
 /* ────────────── SETTINGS ────────────── */
 export function getSettings(): SiteSettings {
   const stored = read<Partial<SiteSettings>>(SETTINGS_KEY, {});
@@ -190,6 +236,8 @@ function useLive<T>(getter: () => T): T {
 export const useDishes = () => useLive<Dish[]>(getDishes);
 export const useBranches = () => useLive<Branch[]>(getBranches);
 export const useSettings = () => useLive<SiteSettings>(getSettings);
+export const useTables = () => useLive<Table[]>(getTables);
+export const useReservations = () => useLive<Reservation[]>(getReservations);
 
 /* ────────────── SEED ────────────── */
 function seedReservations(): Reservation[] {

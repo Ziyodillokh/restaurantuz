@@ -23,6 +23,10 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
+  Users as UsersIcon,
+  StickyNote,
+  AlertTriangle,
+  Clock,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -39,9 +43,15 @@ import {
   getDishes,
   getBranches,
   getSettings,
+  getTables,
+  useTables,
+  saveTables,
+  resetTables,
   resetDishes,
   resetBranches,
+  useReservations,
   SiteSettings,
+  Table as TableT,
 } from "@/lib/store";
 import { formatSom, Dish, Branch } from "@/data/menu";
 import { categoryLabels, categoryOrder, type CategoryKey } from "@/components/menu/pages";
@@ -59,12 +69,12 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-const AUTH_KEY = "kuddus.admin.auth";
+const AUTH_KEY = "zr.v2.admin.auth";
 
 function useAuth() {
   const [authed, setAuthed] = useState<boolean>(() => sessionStorage.getItem(AUTH_KEY) === "1");
   const login = (u: string, p: string) => {
-    if (u === "admin" && p === "kuddus2014") {
+    if (u === "admin" && p === "ziyodullo2024") {
       sessionStorage.setItem(AUTH_KEY, "1");
       setAuthed(true);
       return true;
@@ -112,7 +122,7 @@ function Login({ onLogin }: { onLogin: (u: string, p: string) => boolean }) {
           <Flame className="h-7 w-7 text-primary" />
           <div>
             <div className="font-display text-2xl text-cream">
-              KUDDUS<span className="text-primary"> STEAK</span>
+              ZIYODULLO<span className="text-primary"> RESTAURANT</span>
             </div>
             <div className="text-[10px] tracking-[0.3em] text-gold">ADMIN PANEL</div>
           </div>
@@ -149,7 +159,7 @@ function Login({ onLogin }: { onLogin: (u: string, p: string) => boolean }) {
           <button className="w-full py-4 bg-primary text-cream uppercase tracking-[0.3em] text-xs hover:bg-ember hover:shadow-ember transition-all flex items-center justify-center gap-2">
             <Lock className="h-4 w-4" /> Kirish
           </button>
-          <p className="text-xs text-cream/40 text-center">Demo: admin / kuddus2014</p>
+          <p className="text-xs text-cream/40 text-center">Demo: admin / ziyodullo2024</p>
         </div>
       </motion.form>
     </div>
@@ -187,7 +197,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           <Flame className="h-6 w-6 text-primary" />
           <div className="leading-tight">
             <div className="font-display text-lg text-cream">
-              KUDDUS<span className="text-primary"> STEAK</span>
+              ZIYODULLO<span className="text-primary"> RESTAURANT</span>
             </div>
             <div className="text-[9px] tracking-[0.3em] text-gold">ADMIN</div>
           </div>
@@ -311,13 +321,9 @@ function Stat({
 
 /* ─────────────────────── DASHBOARD ─────────────────────── */
 function Dashboard() {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const reservations = useReservations();
   const dishes = useDishes();
   const branches = useBranches();
-
-  useEffect(() => {
-    setReservations(getReservations());
-  }, []);
 
   const today = new Date().toISOString().slice(0, 10);
   const todayList = reservations.filter((r) => r.date === today);
@@ -413,16 +419,42 @@ function StatusBadge({ s }: { s: Reservation["status"] }) {
   );
 }
 
+/* ─────────────────────── TABLE HELPERS ─────────────────────── */
+function isTableBusy(
+  reservations: Reservation[],
+  tableId: string,
+  date: string,
+  time: string,
+  excludeResId?: string
+) {
+  return reservations.some(
+    (r) =>
+      r.id !== excludeResId &&
+      r.tableId === tableId &&
+      r.date === date &&
+      r.time === time &&
+      r.status === "tasdiqlangan"
+  );
+}
+
+function freeTablesForRes(tables: TableT[], reservations: Reservation[], res: Reservation) {
+  return tables.filter(
+    (t) =>
+      t.branchId === res.branchId &&
+      !isTableBusy(reservations, t.id, res.date, res.time, res.id)
+  );
+}
+
 /* ─────────────────────── BOOKINGS ─────────────────────── */
 function Bookings() {
   const branches = useBranches();
-  const [list, setList] = useState<Reservation[]>([]);
+  const tables = useTables();
+  const list = useReservations();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [branch, setBranch] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("");
-
-  useEffect(() => setList(getReservations()), []);
+  const [confirming, setConfirming] = useState<Reservation | null>(null);
 
   const filtered = list.filter(
     (r) =>
@@ -432,19 +464,37 @@ function Bookings() {
       (q === "" || r.name.toLowerCase().includes(q.toLowerCase()) || r.phone.includes(q))
   );
 
-  const setS = (id: string, s: Reservation["status"]) => {
-    setList(updateReservation(id, { status: s }));
-    toast.success("Status yangilandi");
+  const cancel = (r: Reservation) => {
+    updateReservation(r.id, { status: "bekor", tableId: undefined });
+    toast.success("Bron bekor qilindi");
   };
+
+  const reopen = (r: Reservation) => {
+    updateReservation(r.id, { status: "yangi", tableId: undefined });
+    toast.success("Bron qayta ochildi");
+  };
+
   const del = (id: string) => {
     if (!confirm("Ushbu bronni o'chirishni tasdiqlaysizmi?")) return;
-    setList(deleteReservation(id));
+    deleteReservation(id);
     toast.success("O'chirildi");
+  };
+
+  const confirmBooking = (tableId: string) => {
+    if (!confirming) return;
+    updateReservation(confirming.id, { status: "tasdiqlangan", tableId });
+    toast.success(
+      `Bron tasdiqlandi — ${tables.find((t) => t.id === tableId)?.name || ""}`
+    );
+    setConfirming(null);
   };
 
   return (
     <>
-      <PageHeader title="Bronlar" sub={`Jami: ${list.length} · Ko'rsatilmoqda: ${filtered.length}`} />
+      <PageHeader
+        title="Bronlar"
+        sub={`Jami: ${list.length} · Ko'rsatilmoqda: ${filtered.length}`}
+      />
       <div className="p-6 md:p-8 space-y-5">
         <div className="flex flex-wrap gap-3 items-center">
           <div className="relative flex-1 min-w-[220px]">
@@ -500,67 +550,102 @@ function Bookings() {
         </div>
 
         <div className="border border-border overflow-x-auto">
-          <table className="w-full text-sm min-w-[720px]">
+          <table className="w-full text-sm min-w-[820px]">
             <thead className="bg-muted/40 text-cream/60 text-xs uppercase tracking-wider">
               <tr>
                 <th className="text-left p-3">Mijoz</th>
                 <th className="text-left p-3 hidden md:table-cell">Telefon</th>
                 <th className="text-left p-3">Sana</th>
                 <th className="text-left p-3 hidden lg:table-cell">Filial</th>
-                <th className="text-left p-3">Mehmon</th>
+                <th className="text-left p-3">Meh.</th>
+                <th className="text-left p-3">Stol</th>
                 <th className="text-left p-3">Status</th>
                 <th className="text-right p-3">Amallar</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => (
-                <tr key={r.id} className="border-t border-border hover:bg-muted/20">
-                  <td className="p-3">
-                    <div className="text-cream">{r.name}</div>
-                    <div className="text-xs text-cream/50">{r.id}</div>
-                  </td>
-                  <td className="p-3 hidden md:table-cell text-cream/70">{r.phone}</td>
-                  <td className="p-3 text-cream/80">
-                    {r.date}
-                    <div className="text-xs text-cream/50">{r.time}</div>
-                  </td>
-                  <td className="p-3 hidden lg:table-cell text-cream/70">
-                    {branches.find((b) => b.id === r.branchId)?.name || "—"}
-                  </td>
-                  <td className="p-3 text-cream font-accent">{r.guests}</td>
-                  <td className="p-3">
-                    <StatusBadge s={r.status} />
-                  </td>
-                  <td className="p-3">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        onClick={() => setS(r.id, "tasdiqlangan")}
-                        className="h-8 w-8 grid place-items-center hover:bg-primary/15 hover:text-primary rounded"
-                        title="Tasdiqlash"
-                      >
-                        <Check className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setS(r.id, "bekor")}
-                        className="h-8 w-8 grid place-items-center hover:bg-destructive/15 hover:text-destructive rounded"
-                        title="Bekor"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => del(r.id)}
-                        className="h-8 w-8 grid place-items-center hover:bg-destructive/15 hover:text-destructive rounded"
-                        title="O'chirish"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((r) => {
+                const table = tables.find((t) => t.id === r.tableId);
+                return (
+                  <tr key={r.id} className="border-t border-border hover:bg-muted/20">
+                    <td className="p-3">
+                      <div className="text-cream">{r.name}</div>
+                      <div className="text-xs text-cream/50">{r.id}</div>
+                    </td>
+                    <td className="p-3 hidden md:table-cell text-cream/70">{r.phone}</td>
+                    <td className="p-3 text-cream/80">
+                      {r.date}
+                      <div className="text-xs text-cream/50">{r.time}</div>
+                    </td>
+                    <td className="p-3 hidden lg:table-cell text-cream/70">
+                      {branches.find((b) => b.id === r.branchId)?.name || "—"}
+                    </td>
+                    <td className="p-3 text-cream font-accent">{r.guests}</td>
+                    <td className="p-3">
+                      {table ? (
+                        <span className="text-gold text-xs tracking-[0.15em] uppercase">
+                          {table.name}
+                        </span>
+                      ) : (
+                        <span className="text-cream/30 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      <StatusBadge s={r.status} />
+                    </td>
+                    <td className="p-3">
+                      <div className="flex justify-end gap-1">
+                        {r.status === "yangi" && (
+                          <button
+                            onClick={() => setConfirming(r)}
+                            className="h-8 w-8 grid place-items-center hover:bg-primary/15 hover:text-primary rounded"
+                            title="Tasdiqlash va stol biriktirish"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        )}
+                        {r.status === "tasdiqlangan" && (
+                          <button
+                            onClick={() => setConfirming(r)}
+                            className="h-8 w-8 grid place-items-center hover:bg-gold/15 hover:text-gold rounded"
+                            title="Stolni o'zgartirish"
+                          >
+                            <UsersIcon className="h-4 w-4" />
+                          </button>
+                        )}
+                        {r.status !== "bekor" && (
+                          <button
+                            onClick={() => cancel(r)}
+                            className="h-8 w-8 grid place-items-center hover:bg-destructive/15 hover:text-destructive rounded"
+                            title="Bekor qilish"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                        {r.status === "bekor" && (
+                          <button
+                            onClick={() => reopen(r)}
+                            className="h-8 w-8 grid place-items-center hover:bg-gold/15 hover:text-gold rounded"
+                            title="Qayta ochish"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => del(r.id)}
+                          className="h-8 w-8 grid place-items-center hover:bg-destructive/15 hover:text-destructive rounded"
+                          title="O'chirish"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-cream/50">
+                  <td colSpan={8} className="p-8 text-center text-cream/50">
                     Hech narsa topilmadi
                   </td>
                 </tr>
@@ -569,53 +654,255 @@ function Bookings() {
           </table>
         </div>
       </div>
+
+      {confirming && (
+        <AssignTableModal
+          reservation={confirming}
+          tables={tables}
+          reservations={list}
+          branches={branches}
+          onClose={() => setConfirming(null)}
+          onAssign={confirmBooking}
+        />
+      )}
     </>
   );
 }
 
-/* ─────────────────────── ORDERS (table map) ─────────────────────── */
-function Orders() {
-  // Visual hall map. Tables derive their state from today's confirmed reservations
-  // cycled onto 24 tables — so it reflects admin actions.
-  const branches = useBranches();
-  const [branchId, setBranchId] = useState<string>(branches[0]?.id || "");
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+function AssignTableModal({
+  reservation,
+  tables,
+  reservations,
+  branches,
+  onClose,
+  onAssign,
+}: {
+  reservation: Reservation;
+  tables: TableT[];
+  reservations: Reservation[];
+  branches: Branch[];
+  onClose: () => void;
+  onAssign: (tableId: string) => void;
+}) {
+  const branchName = branches.find((b) => b.id === reservation.branchId)?.name || "—";
+  const branchTables = tables.filter((t) => t.branchId === reservation.branchId);
+  const freeTables = freeTablesForRes(tables, reservations, reservation);
+  const [selected, setSelected] = useState<string>(reservation.tableId || "");
 
-  useEffect(() => setReservations(getReservations()), []);
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 grid place-items-center p-4 overflow-y-auto">
+      <div className="bg-card border border-border w-full max-w-2xl my-8">
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <div>
+            <div className="text-gold text-[10px] tracking-[0.4em]">— STOL BIRIKTIRISH</div>
+            <h2 className="font-display text-xl text-cream mt-1">{reservation.name}</h2>
+            <div className="text-xs text-cream/60 mt-1">
+              {branchName} · {reservation.date} · {reservation.time} · {reservation.guests} mehmon
+            </div>
+          </div>
+          <button onClick={onClose} className="h-9 w-9 grid place-items-center hover:bg-muted rounded">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-5 max-h-[60vh] overflow-y-auto">
+          {branchTables.length === 0 ? (
+            <div className="flex items-start gap-3 p-4 border border-destructive/30 bg-destructive/5 text-cream/80 text-sm">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div>
+                Bu filialda hali stollar qo'shilmagan. Avval "Stol xaritasi" sahifasiga o'tib, stollarni qo'shing.
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="text-xs text-cream/60 mb-3">
+                Mavjud: {freeTables.length}/{branchTables.length} stol
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {branchTables.map((t) => {
+                  const busy = !freeTables.includes(t);
+                  const isSelected = selected === t.id;
+                  const fitsGuests = t.capacity == null || t.capacity >= reservation.guests;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setSelected(t.id)}
+                      className={cn(
+                        "text-left p-4 border transition-all",
+                        busy
+                          ? "border-border/60 bg-muted/30 opacity-50 cursor-not-allowed"
+                          : isSelected
+                          ? "border-primary bg-primary/10 shadow-ember"
+                          : "border-border hover:border-primary/60 hover:bg-muted/30"
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="font-display text-lg text-cream">{t.name}</div>
+                        {isSelected && !busy && (
+                          <Check className="h-5 w-5 text-primary" />
+                        )}
+                        {busy && (
+                          <span className="text-[9px] tracking-[0.2em] uppercase text-destructive">
+                            band
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-cream/60">
+                        {t.capacity != null && (
+                          <span className="flex items-center gap-1">
+                            <UsersIcon className="h-3 w-3" /> {t.capacity} kishi
+                          </span>
+                        )}
+                        {!fitsGuests && !busy && (
+                          <span className="text-gold flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3" /> kichik
+                          </span>
+                        )}
+                      </div>
+                      {t.note && (
+                        <div className="mt-2 text-[10px] uppercase tracking-[0.25em] text-gold/80">
+                          {t.note}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="p-5 border-t border-border flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 border border-border text-cream/80 text-xs uppercase tracking-[0.2em] hover:bg-muted"
+          >
+            Bekor
+          </button>
+          <button
+            onClick={() => {
+              if (!selected) {
+                toast.error("Stolni tanlang");
+                return;
+              }
+              onAssign(selected);
+            }}
+            disabled={!selected}
+            className={cn(
+              "px-5 py-2.5 text-xs uppercase tracking-[0.2em] flex items-center gap-2 transition-all",
+              selected
+                ? "bg-primary text-cream hover:bg-ember"
+                : "bg-muted text-cream/40 cursor-not-allowed"
+            )}
+          >
+            <Check className="h-3.5 w-3.5" /> Tasdiqlash
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────── STOL XARITASI ─────────────────────── */
+function Orders() {
+  const branches = useBranches();
+  const tables = useTables();
+  const reservations = useReservations();
+
+  const [branchId, setBranchId] = useState<string>(branches[0]?.id || "");
+  const [editing, setEditing] = useState<TableT | null>(null);
+  const [detail, setDetail] = useState<{ table: TableT; res?: Reservation } | null>(null);
+
   useEffect(() => {
     if (!branchId && branches[0]) setBranchId(branches[0].id);
   }, [branches, branchId]);
 
   const today = new Date().toISOString().slice(0, 10);
-  const todayRes = reservations.filter(
-    (r) => r.date === today && r.branchId === branchId && r.status !== "bekor"
+  const branchTables = useMemo(
+    () => tables.filter((t) => t.branchId === branchId),
+    [tables, branchId]
   );
 
-  const tables = Array.from({ length: 24 }, (_, i) => {
-    const n = i + 1;
-    const res = todayRes[i];
-    const state: "bo'sh" | "band" | "kutmoqda" | "xizmat" = res
-      ? res.status === "tasdiqlangan"
-        ? "band"
-        : "kutmoqda"
-      : i % 7 === 3
-      ? "xizmat"
-      : "bo'sh";
-    return { n, state, res };
-  });
+  const todayRes = useMemo(
+    () =>
+      reservations.filter(
+        (r) =>
+          r.date === today &&
+          r.branchId === branchId &&
+          r.status === "tasdiqlangan"
+      ),
+    [reservations, branchId, today]
+  );
 
-  const stateClass: Record<"bo'sh" | "band" | "kutmoqda" | "xizmat", string> = {
-    "bo'sh": "border-border text-cream/40",
-    band: "border-primary/60 bg-primary/15 text-primary",
-    kutmoqda: "border-gold/60 bg-gold/15 text-gold",
-    xizmat: "border-ember/60 bg-ember/15 text-ember",
+  const busyCount = branchTables.filter((t) => todayRes.some((r) => r.tableId === t.id)).length;
+  const freeCount = branchTables.length - busyCount;
+
+  const add = () => {
+    if (!branchId) {
+      toast.error("Avval filialni tanlang");
+      return;
+    }
+    const next = branchTables.length + 1;
+    const t: TableT = {
+      id: `${branchId}-t-${Date.now()}`,
+      branchId,
+      name: `Stol ${next}`,
+      capacity: 4,
+      note: "",
+    };
+    saveTables([...tables, t]);
+    setEditing(t);
+  };
+
+  const del = (id: string) => {
+    if (!confirm("Stolni o'chirishni tasdiqlaysizmi?")) return;
+    // Also unassign any reservations using this table
+    const res = getReservations();
+    res.forEach((r) => {
+      if (r.tableId === id) updateReservation(r.id, { tableId: undefined });
+    });
+    saveTables(tables.filter((t) => t.id !== id));
+    toast.success("O'chirildi");
+  };
+
+  const saveEdit = (t: TableT) => {
+    const exists = tables.some((x) => x.id === t.id);
+    saveTables(exists ? tables.map((x) => (x.id === t.id ? t : x)) : [...tables, t]);
+    toast.success("Saqlandi");
+    setEditing(null);
   };
 
   return (
     <>
-      <PageHeader title="Stol xaritasi" sub={`Bugun: ${todayRes.length} ta faol bron`} />
-      <div className="p-6 md:p-8">
-        <div className="flex flex-wrap gap-3 mb-6 items-center">
+      <PageHeader
+        title="Stol xaritasi"
+        sub={`${branchTables.length} stol · Bugun: ${busyCount} band / ${freeCount} bo'sh`}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                if (confirm("Stollarni boshlang'ich holatiga qaytarasizmi?")) {
+                  resetTables();
+                  toast.success("Stollar qayta tiklandi");
+                }
+              }}
+              className="px-4 py-2.5 border border-border text-cream text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-muted"
+            >
+              <RotateCcw className="h-3.5 w-3.5" /> Qayta tiklash
+            </button>
+            <button
+              onClick={add}
+              className="px-5 py-2.5 bg-primary text-cream text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-ember"
+            >
+              <Plus className="h-4 w-4" /> Yangi stol
+            </button>
+          </div>
+        }
+      />
+      <div className="p-6 md:p-8 space-y-6">
+        <div className="flex flex-wrap gap-3 items-center">
           <select
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
@@ -627,41 +914,310 @@ function Orders() {
               </option>
             ))}
           </select>
-          <div className="flex gap-2 text-xs flex-wrap">
-            {(Object.keys(stateClass) as Array<keyof typeof stateClass>).map((k) => (
-              <div key={k} className={cn("px-3 py-1.5 border uppercase tracking-wider", stateClass[k])}>
-                {k}
-              </div>
-            ))}
+          <div className="flex gap-2 text-[10px] uppercase tracking-[0.25em] items-center">
+            <span className="flex items-center gap-1.5 text-cream/60">
+              <span className="h-2 w-2 rounded-full bg-primary" /> band
+            </span>
+            <span className="flex items-center gap-1.5 text-cream/60">
+              <span className="h-2 w-2 rounded-full bg-muted-foreground/50" /> bo'sh
+            </span>
           </div>
         </div>
 
-        <div className="border border-border bg-card p-4 md:p-8">
-          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
-            {tables.map((t) => (
-              <button
-                key={t.n}
-                title={t.res ? `${t.res.name} · ${t.res.time} · ${t.res.guests} meh.` : `Stol ${t.n}`}
-                className={cn(
-                  "aspect-square border-2 grid place-items-center font-accent text-xl md:text-2xl transition-all hover:scale-105 relative",
-                  stateClass[t.state]
-                )}
-              >
-                {t.n}
-                {t.res && (
-                  <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[9px] font-sans font-medium whitespace-nowrap">
-                    {t.res.time}
-                  </span>
-                )}
-              </button>
-            ))}
+        {branchTables.length === 0 ? (
+          <div className="text-center text-cream/50 py-16 border border-dashed border-border">
+            Bu filialda hali stollar yo'q. "Yangi stol" tugmasi orqali qo'shing.
           </div>
-          <div className="mt-6 text-center text-xs text-cream/60">
-            Stol holati bugungi bronlardan avtomatik olinadi. Tafsilot uchun bosing.
+        ) : (
+          <div className="border border-border bg-card p-5 md:p-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+              {branchTables.map((t) => {
+                const res = todayRes.find((r) => r.tableId === t.id);
+                const busy = !!res;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setDetail({ table: t, res })}
+                    className={cn(
+                      "relative border-2 p-4 transition-all hover:scale-[1.03] text-left group",
+                      busy
+                        ? "border-primary/70 bg-primary/10 text-primary"
+                        : "border-border/80 bg-muted/20 text-cream/80 hover:border-primary/40"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-display text-lg leading-tight">{t.name}</div>
+                      <span
+                        className={cn(
+                          "text-[9px] tracking-[0.25em] uppercase",
+                          busy ? "text-primary" : "text-cream/40"
+                        )}
+                      >
+                        {busy ? "band" : "bo'sh"}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-[11px] text-cream/50 flex items-center gap-2 flex-wrap">
+                      {t.capacity != null && (
+                        <span className="inline-flex items-center gap-1">
+                          <UsersIcon className="h-3 w-3" /> {t.capacity}
+                        </span>
+                      )}
+                      {t.note && (
+                        <span className="inline-flex items-center gap-1 text-gold/80">
+                          <StickyNote className="h-3 w-3" /> {t.note}
+                        </span>
+                      )}
+                    </div>
+                    {res && (
+                      <div className="mt-3 pt-2 border-t border-primary/20 text-[11px] leading-relaxed">
+                        <div className="text-cream font-medium truncate">{res.name}</div>
+                        <div className="text-cream/60 flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> {res.time} · {res.guests} meh.
+                        </div>
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditing(t);
+                        }}
+                        className="h-6 w-6 grid place-items-center bg-background/80 text-cream/80 hover:text-primary rounded cursor-pointer"
+                        title="Tahrirlash"
+                      >
+                        <SettingsIcon className="h-3 w-3" />
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          del(t.id);
+                        }}
+                        className="h-6 w-6 grid place-items-center bg-background/80 text-cream/80 hover:text-destructive rounded cursor-pointer"
+                        title="O'chirish"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+        )}
+
+        <div className="text-xs text-cream/50 text-center">
+          Stol holati bugungi tasdiqlangan bronlardan avtomatik olinadi.
         </div>
       </div>
+
+      {editing && (
+        <TableEditor table={editing} onClose={() => setEditing(null)} onSave={saveEdit} />
+      )}
+      {detail && (
+        <TableDetail
+          table={detail.table}
+          res={detail.res}
+          branchName={branches.find((b) => b.id === detail.table.branchId)?.name || ""}
+          onClose={() => setDetail(null)}
+          onEdit={() => {
+            setEditing(detail.table);
+            setDetail(null);
+          }}
+          onDelete={() => {
+            del(detail.table.id);
+            setDetail(null);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function TableEditor({
+  table,
+  onClose,
+  onSave,
+}: {
+  table: TableT;
+  onClose: () => void;
+  onSave: (t: TableT) => void;
+}) {
+  const [t, setT] = useState<TableT>(table);
+  const set = <K extends keyof TableT>(k: K, v: TableT[K]) => setT((p) => ({ ...p, [k]: v }));
+
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 grid place-items-center p-4 overflow-y-auto">
+      <div className="bg-card border border-border w-full max-w-md my-8">
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <div>
+            <div className="text-gold text-[10px] tracking-[0.4em]">— STOL TAHRIRI</div>
+            <h2 className="font-display text-xl text-cream mt-1">{t.name || "Yangi stol"}</h2>
+          </div>
+          <button onClick={onClose} className="h-9 w-9 grid place-items-center hover:bg-muted rounded">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div>
+            <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+              Stol nomi
+            </label>
+            <input
+              value={t.name}
+              onChange={(e) => set("name", e.target.value)}
+              placeholder="Stol 1"
+              className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+              Sig'imi (nechta kishi)
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={30}
+              value={t.capacity ?? ""}
+              onChange={(e) =>
+                set("capacity", e.target.value === "" ? undefined : Number(e.target.value))
+              }
+              placeholder="4"
+              className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary font-accent"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+              Izoh (ixtiyoriy)
+            </label>
+            <input
+              value={t.note || ""}
+              onChange={(e) => set("note", e.target.value)}
+              placeholder="VIP xona, terrassa, deraza yonida..."
+              className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+            />
+          </div>
+        </div>
+        <div className="p-5 border-t border-border flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 border border-border text-cream/80 text-xs uppercase tracking-[0.2em] hover:bg-muted"
+          >
+            Bekor
+          </button>
+          <button
+            onClick={() => {
+              if (!t.name.trim()) {
+                toast.error("Stol nomini kiriting");
+                return;
+              }
+              onSave(t);
+            }}
+            className="px-5 py-2.5 bg-primary text-cream text-xs uppercase tracking-[0.2em] hover:bg-ember flex items-center gap-2"
+          >
+            <Save className="h-3.5 w-3.5" /> Saqlash
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TableDetail({
+  table,
+  res,
+  branchName,
+  onClose,
+  onEdit,
+  onDelete,
+}: {
+  table: TableT;
+  res?: Reservation;
+  branchName: string;
+  onClose: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 grid place-items-center p-4 overflow-y-auto">
+      <div className="bg-card border border-border w-full max-w-md my-8">
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <div>
+            <div className="text-gold text-[10px] tracking-[0.4em]">— {branchName.toUpperCase()}</div>
+            <h2 className="font-display text-2xl text-cream mt-1">{table.name}</h2>
+          </div>
+          <button onClick={onClose} className="h-9 w-9 grid place-items-center hover:bg-muted rounded">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {table.capacity != null && (
+              <div className="p-3 border border-border">
+                <div className="text-[10px] tracking-[0.3em] text-cream/50 uppercase">Sig'im</div>
+                <div className="font-accent text-2xl text-cream mt-1">{table.capacity}</div>
+              </div>
+            )}
+            <div className="p-3 border border-border">
+              <div className="text-[10px] tracking-[0.3em] text-cream/50 uppercase">Holat</div>
+              <div
+                className={cn(
+                  "font-accent text-xl mt-1",
+                  res ? "text-primary" : "text-cream/60"
+                )}
+              >
+                {res ? "BAND" : "BO'SH"}
+              </div>
+            </div>
+          </div>
+          {table.note && (
+            <div className="p-3 border border-gold/30 bg-gold/5">
+              <div className="text-[10px] tracking-[0.3em] text-gold uppercase">Izoh</div>
+              <div className="text-sm text-cream/80 mt-1">{table.note}</div>
+            </div>
+          )}
+          {res ? (
+            <div className="p-4 border border-primary/30 bg-primary/5 space-y-2">
+              <div className="text-[10px] tracking-[0.3em] text-primary uppercase">
+                Bugungi bron
+              </div>
+              <div className="font-display text-lg text-cream">{res.name}</div>
+              <div className="text-sm text-cream/70 flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" /> {res.time}
+                </span>
+                <span className="flex items-center gap-1">
+                  <UsersIcon className="h-3 w-3" /> {res.guests}
+                </span>
+              </div>
+              <div className="text-xs text-cream/60">{res.phone}</div>
+              {res.note && (
+                <div className="text-xs italic text-cream/60 border-l-2 border-gold/40 pl-3 mt-2">
+                  {res.note}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-4 border border-dashed border-border text-center text-cream/50 text-sm">
+              Bugun bu stol bo'sh
+            </div>
+          )}
+        </div>
+        <div className="p-5 border-t border-border flex justify-between gap-3">
+          <button
+            onClick={onDelete}
+            className="px-4 py-2.5 border border-destructive/40 text-destructive text-xs uppercase tracking-[0.2em] hover:bg-destructive/10 flex items-center gap-2"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> O'chirish
+          </button>
+          <button
+            onClick={onEdit}
+            className="px-5 py-2.5 bg-primary text-cream text-xs uppercase tracking-[0.2em] hover:bg-ember flex items-center gap-2"
+          >
+            <SettingsIcon className="h-3.5 w-3.5" /> Tahrirlash
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1311,10 +1867,8 @@ function BranchEditor({
 
 /* ─────────────────────── STATS ─────────────────────── */
 function Stats() {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const reservations = useReservations();
   const branches = useBranches();
-
-  useEffect(() => setReservations(getReservations()), []);
 
   // Group by month over the past 12 months
   const now = new Date();
@@ -1409,6 +1963,7 @@ function SettingsPage() {
       settings: getSettings(),
       dishes: getDishes(),
       branches: getBranches(),
+      tables: getTables(),
       reservations: getReservations(),
       exportedAt: new Date().toISOString(),
     };
@@ -1430,6 +1985,7 @@ function SettingsPage() {
         if (data.settings) saveSettings(data.settings);
         if (Array.isArray(data.dishes)) saveDishes(data.dishes);
         if (Array.isArray(data.branches)) saveBranches(data.branches);
+        if (Array.isArray(data.tables)) saveTables(data.tables);
         toast.success("Ma'lumotlar yuklandi");
       } catch {
         toast.error("Faylni o'qib bo'lmadi");

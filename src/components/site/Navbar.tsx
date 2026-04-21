@@ -19,8 +19,8 @@ export default function Navbar() {
   const loc = useLocation();
   const settings = useSettings();
   const brand = settings.name.split(" ");
-  const brandFirst = brand[0] || "KUDDUS";
-  const brandRest = brand.slice(1).join(" ") || "STEAK";
+  const brandFirst = brand[0] || "ZIYODULLO";
+  const brandRest = brand.slice(1).join(" ") || "RESTAURANT";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);

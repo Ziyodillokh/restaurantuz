@@ -5,8 +5,8 @@ import { useSettings } from "@/lib/store";
 export default function Footer() {
   const s = useSettings();
   const brand = s.name.split(" ");
-  const brandFirst = brand[0] || "KUDDUS";
-  const brandRest = brand.slice(1).join(" ") || "STEAK";
+  const brandFirst = brand[0] || "ZIYODULLO";
+  const brandRest = brand.slice(1).join(" ") || "RESTAURANT";
 
   return (
     <footer className="relative bg-[hsl(0_0%_3%)] text-cream/80 border-t border-border/50">
@@ -74,7 +74,7 @@ export default function Footer() {
               <Music2 className="h-4 w-4" />
             </a>
           </div>
-          <p className="mt-6 text-xs text-cream/50">@kuddussteak</p>
+          <p className="mt-6 text-xs text-cream/50">@ziyodullo.restaurant</p>
         </div>
       </div>
 

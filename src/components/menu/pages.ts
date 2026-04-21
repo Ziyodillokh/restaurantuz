@@ -55,7 +55,7 @@ export type PageContent =
     }
   | { kind: "back" };
 
-// how many dishes fit on one book page by category — tuned so no overflow on 540×745
+// 3 dishes per page everywhere — guarantees no overflow on 540×745 and a generous layout
 const perPage: Record<CategoryKey, number> = {
   starter: 3,
   soup: 3,
@@ -63,9 +63,9 @@ const perPage: Record<CategoryKey, number> = {
   premium: 2,
   classic: 3,
   burger: 3,
-  garnish: 4,
-  sauce: 4,
-  drink: 4,
+  garnish: 3,
+  sauce: 3,
+  drink: 3,
   dessert: 3,
 };
 

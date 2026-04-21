@@ -3,6 +3,10 @@ import { Flame, Sparkles, Star } from "lucide-react";
 import type { Dish } from "@/data/menu";
 import { formatSom } from "@/data/menu";
 
+// Always-available fallback food photo (replaces broken URLs on <img onerror>)
+const FALLBACK_IMG =
+  "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=80";
+
 const badgeMap: Record<NonNullable<Dish["badge"]>, { label: string; icon: any; cls: string }> = {
   chef: { label: "Chef's Pick", icon: Sparkles, cls: "bg-[hsl(38_50%_40%)] text-[hsl(36_40%_95%)]" },
   signature: { label: "Signature", icon: Star, cls: "bg-[hsl(351_70%_35%)] text-[hsl(36_40%_95%)]" },
@@ -31,7 +35,11 @@ export default function DishItem({ d, compact = false }: { d: Dish; compact?: bo
               alt={d.name}
               loading="lazy"
               onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
+                const img = e.currentTarget as HTMLImageElement;
+                if (img.dataset.fallback !== "1") {
+                  img.dataset.fallback = "1";
+                  img.src = FALLBACK_IMG;
+                }
               }}
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
             />

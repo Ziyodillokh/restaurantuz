@@ -33,7 +33,7 @@ export const dishes: Dish[] = [
   // ───────── STARTERS ─────────
   { id: "carpaccio", name: "Beef Carpaccio", weight: "120g", price: 95000, category: "starter", badge: "chef",
     desc: "Yupqa kesilgan xom mol go'shti, ruccola va parmezan bilan.",
-    image: "https://images.unsplash.com/photo-1625937329935-287441889369?auto=format&fit=crop&w=900&q=80" },
+    image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=80" },
   { id: "tartare", name: "Steak Tartare", weight: "150g", price: 135000, category: "starter", badge: "signature",
     desc: "Qo'lda chopilgan filey, kapers va bedana tuxumi sarig'i bilan.",
     image: "https://images.unsplash.com/photo-1626200419199-391ae4be7a41?auto=format&fit=crop&w=900&q=80" },
@@ -110,7 +110,7 @@ export const dishes: Dish[] = [
     image: "https://images.unsplash.com/photo-1633237308525-cd587cf71926?auto=format&fit=crop&w=900&q=80" },
 
   // ───────── BURGERS ─────────
-  { id: "kuddus-burger", name: "Kuddus Signature Burger", weight: "380g", price: 125000, category: "burger", badge: "signature",
+  { id: "kuddus-burger", name: "Signature Burger", weight: "380g", price: 125000, category: "burger", badge: "signature",
     desc: "Ikki qatlam Wagyu kotleti, cheddar, karamellangan piyoz.",
     image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=80" },
   { id: "truffle-burger", name: "Truffle Mushroom Burger", weight: "340g", price: 115000, category: "burger",
@@ -141,10 +141,10 @@ export const dishes: Dish[] = [
     image: "https://images.unsplash.com/photo-1515516969-d4008cc6241a?auto=format&fit=crop&w=900&q=80" },
   { id: "spinach", name: "Creamed Spinach", price: 42000, category: "garnish",
     desc: "Kremli ismaloq, mushkat yong'og'i hidi bilan.",
-    image: "https://images.unsplash.com/photo-1604908554007-2a737a0b5c3a?auto=format&fit=crop&w=900&q=80" },
+    image: "https://images.unsplash.com/photo-1515543904379-3d757afe72e4?auto=format&fit=crop&w=900&q=80" },
   { id: "mac", name: "Truffle Mac & Cheese", price: 58000, category: "garnish", badge: "new",
     desc: "Uch xil pishloq va trufel bilan makaron.",
-    image: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=900&q=80" },
+    image: "https://images.unsplash.com/photo-1612152328178-aad28c6e2bc3?auto=format&fit=crop&w=900&q=80" },
 
   // ───────── SAUCES ─────────
   { id: "pepper", name: "Pepper Sous", price: 15000, category: "sauce", desc: "Qora murchli, kremli.",

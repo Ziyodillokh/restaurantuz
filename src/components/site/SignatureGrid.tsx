@@ -40,18 +40,19 @@ export default function SignatureGrid() {
               className="group relative overflow-hidden border border-border hover:border-primary/60 transition-all bg-card"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
-                {d.image ? (
-                  <img
-                    src={d.image}
-                    alt={d.name}
-                    className="h-full w-full object-cover transition-transform duration-[1.4s] group-hover:scale-110"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-[hsl(0_0%_8%)] grid place-items-center">
-                    <div className="text-gold/40 text-6xl">❦</div>
-                  </div>
-                )}
+                <img
+                  src={d.image || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=80"}
+                  alt={d.name}
+                  className="h-full w-full object-cover transition-transform duration-[1.4s] group-hover:scale-110"
+                  loading="lazy"
+                  onError={(e) => {
+                    const img = e.currentTarget as HTMLImageElement;
+                    if (img.dataset.fallback !== "1") {
+                      img.dataset.fallback = "1";
+                      img.src = "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=80";
+                    }
+                  }}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-6">

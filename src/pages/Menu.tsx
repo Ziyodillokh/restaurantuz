@@ -196,8 +196,8 @@ function renderPage(p: ReturnType<typeof buildPages>[number], idx: number) {
         <div className="text-center leather-frame p-10 md:p-12 relative">
           <div className="absolute top-2 left-2 right-2 bottom-2 border border-[hsl(38_55%_55%)]/40 pointer-events-none" />
           <div className="text-[10px] tracking-[0.6em] gold-foil">EST · 2014</div>
-          <div className="font-display text-4xl md:text-5xl mt-6 gold-foil">KUDDUS</div>
-          <div className="font-display text-4xl md:text-5xl gold-foil">STEAK</div>
+          <div className="font-display text-4xl md:text-5xl mt-6 gold-foil">ZIYODULLO</div>
+          <div className="font-display text-4xl md:text-5xl gold-foil">RESTAURANT</div>
           <div className="my-6 h-px w-24 bg-[hsl(38_55%_55%)] mx-auto" />
           <div className="font-accent text-2xl tracking-[0.4em] gold-foil">— MENYU —</div>
           <div className="mt-8 text-[9px] tracking-[0.5em] text-[hsl(38_45%_60%)]">
@@ -219,7 +219,7 @@ function renderPage(p: ReturnType<typeof buildPages>[number], idx: number) {
             +998 71 200 14 14
           </div>
           <div className="mt-6 text-[9px] tracking-[0.5em] text-[hsl(38_45%_60%)]">
-            KUDDUSSTEAK.UZ
+            ZIYODULLO-RESTAURANT.UZ
           </div>
         </div>
       </HardPage>
@@ -234,7 +234,7 @@ function renderPage(p: ReturnType<typeof buildPages>[number], idx: number) {
             XUSH KELIBSIZ
           </div>
           <h2 className="font-display text-3xl md:text-4xl mt-4 text-[hsl(20_40%_15%)]">
-            Kuddus Steak Menyusi
+            Ziyodullo Restaurant Menyusi
           </h2>
           <div className="ornament ornament-aged my-6 mx-8" />
           <p className="font-serif-alt italic text-base md:text-lg max-w-md mx-auto leading-relaxed text-[hsl(20_30%_25%)]">
@@ -242,7 +242,7 @@ function renderPage(p: ReturnType<typeof buildPages>[number], idx: number) {
             AQSH, Avstraliyaning eng yaxshi marmar go'shtidan tajriba."
           </p>
           <div className="mt-10 text-[10px] tracking-[0.4em] text-[hsl(20_30%_30%)]">
-            — OSHPAZ KUDDUS —
+            — OSHPAZ ZIYODULLO —
           </div>
         </div>
       </BookPage>
@@ -284,7 +284,7 @@ function renderPage(p: ReturnType<typeof buildPages>[number], idx: number) {
         ))}
       </div>
       <div className="text-center text-[9px] tracking-[0.4em] text-[hsl(20_25%_40%)] mt-2">
-        — KUDDUS STEAK —
+        — ZIYODULLO RESTAURANT —
       </div>
     </BookPage>
   );
@@ -332,7 +332,7 @@ function MobileMenu({ dishes }: { dishes: Dish[] }) {
       <div className="texture-leather rounded-sm p-6 mb-6 leather-frame">
         <div className="text-center">
           <div className="text-[9px] tracking-[0.5em] gold-foil">EST · 2014</div>
-          <div className="font-display text-3xl mt-2 gold-foil">KUDDUS STEAK</div>
+          <div className="font-display text-3xl mt-2 gold-foil">ZIYODULLO RESTAURANT</div>
           <div className="my-3 h-px w-16 bg-[hsl(38_55%_55%)] mx-auto" />
           <div className="font-accent tracking-[0.4em] gold-foil">— MENYU —</div>
         </div>
@@ -452,9 +452,9 @@ export default function MenuPage() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
           >
             {isMobile ? <MobileMenu dishes={dishes} /> : <DesktopBook dishes={dishes} />}
           </motion.div>

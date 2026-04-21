@@ -80,7 +80,7 @@ export default function About() {
           <div className="gold-divider my-8 w-24" />
           <div className="space-y-4 text-cream/75 text-base md:text-lg leading-relaxed">
             <p>
-              2014-yilda Toshkent markazida tug'ilgan Kuddus Steak — bugun mamlakatdagi premium steakhouse'lar
+              Toshkent markazida tug'ilgan Ziyodullo Restaurant — bugun mamlakatdagi premium restoranlar
               orasida o'zining alohida o'rniga ega. Biz har bir bo'lakni san'at asari deb bilamiz.
             </p>
             <p>
