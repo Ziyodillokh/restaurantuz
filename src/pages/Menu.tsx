@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import HTMLFlipBook from "react-pageflip";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, BookOpen, List, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, List } from "lucide-react";
 import Layout from "@/components/site/Layout";
 import BookPage, { HardPage } from "@/components/menu/BookPage";
 import DishItem from "@/components/menu/DishItem";
@@ -12,12 +12,13 @@ import {
   categorySubtitle,
   type CategoryKey,
 } from "@/components/menu/pages";
-import { dishes } from "@/data/menu";
+import { useDishes, useSettings } from "@/lib/store";
+import type { Dish } from "@/data/menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 /* ────────────────────── DESKTOP BOOK ────────────────────── */
-function DesktopBook() {
-  const pages = useMemo(() => buildPages(), []);
+function DesktopBook({ dishes }: { dishes: Dish[] }) {
+  const pages = useMemo(() => buildPages(dishes), [dishes]);
   const bookRef = useRef<any>(null);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState({ w: 520, h: 720 });
@@ -27,9 +28,21 @@ function DesktopBook() {
     const compute = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const w = Math.min(vw / 2 - 80, 540);
-      const h = Math.min(w * 1.38, vh - 220);
-      setSize({ w: Math.max(w, 380), h: Math.max(h, 540) });
+      // Reserve space for header, TOC button, page counter & gutters.
+      const availW = Math.min(vw - 220, 1200); // leave room for side arrows + padding
+      const availH = vh - 260;
+
+      // Keep a portrait page aspect ratio of ~1:1.38 — target height, then derive width.
+      let h = Math.min(availH, 800);
+      let w = h / 1.38;
+      // Two-page spread must fit horizontally
+      if (w * 2 > availW) {
+        w = availW / 2;
+        h = w * 1.38;
+      }
+      w = Math.max(Math.min(w, 540), 360);
+      h = Math.max(Math.min(h, 800), 520);
+      setSize({ w, h });
     };
     compute();
     window.addEventListener("resize", compute);
@@ -51,12 +64,20 @@ function DesktopBook() {
     setShowToc(false);
   };
 
+  const availableCats = useMemo(
+    () =>
+      categoryOrder.filter((c) =>
+        pages.some((p) => p.kind === "section-cover" && p.category === c)
+      ),
+    [pages]
+  );
+
   return (
     <div className="relative">
       {/* TOC button */}
       <button
         onClick={() => setShowToc((v) => !v)}
-        className="absolute -top-14 right-0 inline-flex items-center gap-2 text-cream/70 hover:text-primary transition-colors text-xs tracking-[0.3em]"
+        className="absolute -top-14 right-0 inline-flex items-center gap-2 text-cream/70 hover:text-primary transition-colors text-xs tracking-[0.3em] z-30"
       >
         <List className="h-4 w-4" /> KATEGORIYALAR
       </button>
@@ -69,8 +90,10 @@ function DesktopBook() {
             exit={{ opacity: 0, y: -10 }}
             className="absolute -top-2 right-0 z-30 glass-dark rounded-md p-3 min-w-[240px] border border-accent/20"
           >
-            <div className="text-[10px] tracking-[0.3em] text-accent mb-2 px-2">— MUNDARIJA —</div>
-            {categoryOrder.map((c) => (
+            <div className="text-[10px] tracking-[0.3em] text-accent mb-2 px-2">
+              — MUNDARIJA —
+            </div>
+            {availableCats.map((c) => (
               <button
                 key={c}
                 onClick={() => goToCategory(c)}
@@ -86,7 +109,7 @@ function DesktopBook() {
       <div className="flex justify-center items-center">
         <button
           onClick={() => bookRef.current?.pageFlip()?.flipPrev()}
-          className="hidden lg:grid place-items-center h-12 w-12 mr-6 rounded-full border border-cream/30 text-cream hover:border-primary hover:text-primary transition-all hover:scale-110"
+          className="hidden lg:grid place-items-center h-12 w-12 mr-6 rounded-full border border-cream/30 text-cream hover:border-primary hover:text-primary transition-all hover:scale-110 shrink-0"
           aria-label="Oldingi"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -110,9 +133,9 @@ function DesktopBook() {
               width={size.w}
               height={size.h}
               size="fixed"
-              minWidth={380}
+              minWidth={360}
               maxWidth={600}
-              minHeight={540}
+              minHeight={520}
               maxHeight={900}
               drawShadow
               flippingTime={900}
@@ -139,7 +162,7 @@ function DesktopBook() {
 
         <button
           onClick={() => bookRef.current?.pageFlip()?.flipNext()}
-          className="hidden lg:grid place-items-center h-12 w-12 ml-6 rounded-full border border-cream/30 text-cream hover:border-primary hover:text-primary transition-all hover:scale-110"
+          className="hidden lg:grid place-items-center h-12 w-12 ml-6 rounded-full border border-cream/30 text-cream hover:border-primary hover:text-primary transition-all hover:scale-110 shrink-0"
           aria-label="Keyingi"
         >
           <ChevronRight className="h-5 w-5" />
@@ -216,7 +239,7 @@ function renderPage(p: ReturnType<typeof buildPages>[number], idx: number) {
           <div className="ornament ornament-aged my-6 mx-8" />
           <p className="font-serif-alt italic text-base md:text-lg max-w-md mx-auto leading-relaxed text-[hsl(20_30%_25%)]">
             "Har bir bo'lakda — 10 yillik mahorat, olov sadosi va Argentina,
-            AQSH, Avstraliyaning eng yaxshi marmar go'shtidan tayyorlangan tajriba."
+            AQSH, Avstraliyaning eng yaxshi marmar go'shtidan tajriba."
           </p>
           <div className="mt-10 text-[10px] tracking-[0.4em] text-[hsl(20_30%_30%)]">
             — OSHPAZ KUDDUS —
@@ -268,17 +291,16 @@ function renderPage(p: ReturnType<typeof buildPages>[number], idx: number) {
 }
 
 /* ────────────────────── MOBILE EXPERIENCE ────────────────────── */
-function MobileMenu() {
-  const [active, setActive] = useState<CategoryKey>("premium");
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
+function MobileMenu({ dishes }: { dishes: Dish[] }) {
   const grouped = useMemo(
     () =>
       categoryOrder
         .map((c) => ({ key: c, items: dishes.filter((d) => d.category === c) }))
         .filter((g) => g.items.length > 0),
-    []
+    [dishes]
   );
+  const [active, setActive] = useState<CategoryKey>(grouped[0]?.key || "premium");
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const scrollTo = (c: CategoryKey) => {
     const el = sectionRefs.current[c];
@@ -288,7 +310,6 @@ function MobileMenu() {
     }
   };
 
-  // Track active category on scroll
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY + 140;
@@ -344,7 +365,6 @@ function MobileMenu() {
             ref={(el) => (sectionRefs.current[g.key] = el)}
             className="texture-paper rounded-sm shadow-deep relative overflow-hidden"
           >
-            {/* corner curl decoration */}
             <div
               aria-hidden
               className="absolute top-0 right-0 w-10 h-10 pointer-events-none"
@@ -355,7 +375,9 @@ function MobileMenu() {
             />
             <div className="p-5 text-[hsl(20_30%_15%)]">
               <div className="text-center">
-                <div className="text-[10px] tracking-[0.5em] text-[hsl(38_50%_38%)]">— BO'LIM —</div>
+                <div className="text-[10px] tracking-[0.5em] text-[hsl(38_50%_38%)]">
+                  — BO'LIM —
+                </div>
                 <h2 className="font-display text-2xl mt-1 text-[hsl(20_40%_15%)]">
                   {categoryLabels[g.key]}
                 </h2>
@@ -384,6 +406,8 @@ function MobileMenu() {
 /* ────────────────────── PAGE WRAPPER ────────────────────── */
 export default function MenuPage() {
   const isMobile = useIsMobile();
+  const dishes = useDishes();
+  const settings = useSettings();
 
   return (
     <Layout>
@@ -417,7 +441,8 @@ export default function MenuPage() {
               MENYU KITOBI
             </div>
             <h1 className="font-display text-4xl md:text-6xl text-cream">
-              Bizning <span className="italic text-gradient-ember">qadr-qiymatlarimiz</span>
+              {settings.name}{" "}
+              <span className="italic text-gradient-ember">qadr-qiymatlari</span>
             </h1>
             <p className="mt-3 text-cream/55 text-sm">
               {isMobile
@@ -431,7 +456,7 @@ export default function MenuPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.2 }}
           >
-            {isMobile ? <MobileMenu /> : <DesktopBook />}
+            {isMobile ? <MobileMenu dishes={dishes} /> : <DesktopBook dishes={dishes} />}
           </motion.div>
         </div>
       </section>

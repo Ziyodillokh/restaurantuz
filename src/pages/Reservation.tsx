@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "@/components/site/Layout";
-import { branches, dishes } from "@/data/menu";
-import { saveReservation } from "@/lib/store";
+import { saveReservation, useBranches, useDishes } from "@/lib/store";
 import { motion } from "framer-motion";
 import { Check, Minus, Plus, Calendar, Users, MapPin, Phone, User, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +15,8 @@ for (let h = 12; h <= 23; h++) {
 export default function Reservation() {
   const loc = useLocation();
   const nav = useNavigate();
+  const branches = useBranches();
+  const dishes = useDishes();
   const initialDish = (loc.state as any)?.dish as string | undefined;
 
   const [name, setName] = useState("");
@@ -23,7 +24,7 @@ export default function Reservation() {
   const [date, setDate] = useState(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10));
   const [time, setTime] = useState("19:30");
   const [guests, setGuests] = useState(2);
-  const [branchId, setBranchId] = useState(branches[0].id);
+  const [branchId, setBranchId] = useState(branches[0]?.id || "");
   const [note, setNote] = useState("");
   const [preorderOn, setPreorderOn] = useState(!!initialDish);
   const [picked, setPicked] = useState<string[]>(initialDish ? [initialDish] : []);

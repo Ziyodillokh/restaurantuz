@@ -12,39 +12,45 @@ const badgeMap: Record<NonNullable<Dish["badge"]>, { label: string; icon: any; c
 
 export default function DishItem({ d, compact = false }: { d: Dish; compact?: boolean }) {
   const Badge = d.badge ? badgeMap[d.badge] : null;
+  const imgSize = compact ? "w-14 h-14" : "w-16 h-16 md:w-20 md:h-20";
+  const fallbackSize = compact ? "w-10 h-14" : "w-10 h-16";
+
   return (
-    <div className="flex gap-4 py-3 border-b border-dashed border-[hsl(28_25%_55%)]/35 last:border-0 group">
+    <div className="flex gap-3 py-2.5 border-b border-dashed border-[hsl(28_25%_55%)]/35 last:border-0 group">
       {d.image ? (
-        <div className="relative shrink-0">
+        <div className="relative shrink-0 self-center">
           <div
-            className={`${compact ? "w-16 h-16" : "w-20 h-20 md:w-24 md:h-24"} overflow-hidden rounded-full ring-1 ring-[hsl(20_40%_15%)]/20`}
+            className={`${imgSize} overflow-hidden rounded-full ring-1 ring-[hsl(20_40%_15%)]/20`}
             style={{
               boxShadow:
-                "0 0 0 2px hsl(36 30% 92%), 0 0 0 3px hsl(38 55% 45%), 0 8px 18px -8px hsl(20 40% 10% / 0.5)",
+                "0 0 0 2px hsl(36 30% 92%), 0 0 0 3px hsl(38 55% 45%), 0 6px 14px -8px hsl(20 40% 10% / 0.5)",
             }}
           >
             <img
               src={d.image}
               alt={d.name}
               loading="lazy"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           </div>
         </div>
       ) : (
-        <div className={`${compact ? "w-10 h-16" : "w-12 h-20 md:h-24"} shrink-0 grid place-items-center`}>
+        <div className={`${fallbackSize} shrink-0 grid place-items-center self-center`}>
           <div className="text-[hsl(38_50%_38%)] text-2xl">❦</div>
         </div>
       )}
 
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 mb-0.5">
-          <h3 className="font-display text-lg md:text-xl text-[hsl(20_40%_15%)] leading-tight truncate">
+          <h3 className="font-display text-[15px] md:text-base text-[hsl(20_40%_15%)] leading-tight truncate">
             {d.name}
           </h3>
           {Badge && (
             <span
-              className={`hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[8px] tracking-[0.18em] uppercase ${Badge.cls}`}
+              className={`hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[8px] tracking-[0.18em] uppercase shrink-0 ${Badge.cls}`}
             >
               <Badge.icon className="h-2.5 w-2.5" />
               {Badge.label}
@@ -53,23 +59,23 @@ export default function DishItem({ d, compact = false }: { d: Dish; compact?: bo
         </div>
 
         {/* Dotted leader between name and price */}
-        <div className="flex items-end gap-2 -mt-0.5 mb-1">
+        <div className="flex items-end gap-2 -mt-0.5 mb-0.5">
           <span
             aria-hidden
             className="flex-1 mb-1.5 border-b border-dotted border-[hsl(28_30%_45%)]/50"
           />
-          <span className="price-tag text-base md:text-lg whitespace-nowrap">
+          <span className="price-tag text-[15px] md:text-base whitespace-nowrap">
             {formatSom(d.price)}
           </span>
         </div>
 
-        <p className="font-serif-alt italic text-[13px] md:text-sm text-[hsl(20_25%_30%)] leading-snug line-clamp-2">
+        <p className="font-serif-alt italic text-[12px] md:text-[13px] text-[hsl(20_25%_30%)] leading-snug line-clamp-2">
           {d.desc}
         </p>
 
-        <div className="mt-1.5 flex items-center justify-between">
+        <div className="mt-1 flex items-center justify-between gap-2">
           {d.weight ? (
-            <span className="text-[10px] tracking-[0.25em] text-[hsl(20_20%_40%)]">
+            <span className="text-[9px] tracking-[0.25em] text-[hsl(20_20%_40%)]">
               {d.weight}
             </span>
           ) : (

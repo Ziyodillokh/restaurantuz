@@ -1,8 +1,15 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import { useSettings } from "@/lib/store";
 
 export default function Hero() {
+  const s = useSettings();
+  // Split the hero title so we can emphasize the last word in italic + gradient
+  const titleParts = s.heroTitle.trim().split(" ");
+  const titleHead = titleParts.slice(0, -1).join(" ");
+  const titleTail = titleParts.slice(-1)[0] || "";
+
   return (
     <section className="relative h-screen min-h-[640px] w-full overflow-hidden">
       {/* Video background */}
@@ -12,7 +19,7 @@ export default function Hero() {
         muted
         loop
         playsInline
-        poster="https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=1600&q=80"
+        poster={s.heroPoster}
       >
         <source
           src="https://cdn.coverr.co/videos/coverr-grilling-a-steak-on-the-flame-9275/1080p.mp4"
@@ -45,8 +52,8 @@ export default function Hero() {
           transition={{ duration: 1.2, delay: 0.4 }}
           className="font-display text-5xl md:text-7xl lg:text-8xl text-cream leading-[1.05] max-w-5xl"
         >
-          Olovda Tug'ilgan{" "}
-          <span className="italic text-gradient-ember">Ta'm</span>
+          {titleHead}{" "}
+          <span className="italic text-gradient-ember">{titleTail}</span>
         </motion.h1>
 
         <motion.p
@@ -55,8 +62,7 @@ export default function Hero() {
           transition={{ duration: 1, delay: 0.8 }}
           className="mt-6 max-w-xl text-base md:text-lg text-cream/80 font-serif italic"
         >
-          O'zbekistondagi eng yaxshi premium steyklar.
-          Har bir bo'lak — san'at asari.
+          {s.heroSubtitle}
         </motion.p>
 
         <motion.div

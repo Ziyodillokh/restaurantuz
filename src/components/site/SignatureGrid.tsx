@@ -1,47 +1,76 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { dishes, formatSom } from "@/data/menu";
-
-const featured = dishes.filter(d => d.category === "premium");
+import { useMemo } from "react";
+import { formatSom } from "@/data/menu";
+import { useDishes } from "@/lib/store";
 
 export default function SignatureGrid() {
+  const allDishes = useDishes();
+  const featured = useMemo(
+    () =>
+      allDishes
+        .filter(
+          (d) => d.category === "premium" || d.badge === "signature" || d.badge === "chef"
+        )
+        .slice(0, 6),
+    [allDishes]
+  );
+
+  if (featured.length === 0) return null;
+
   return (
     <section className="py-24 md:py-32 bg-gradient-dark relative">
       <div className="container-px max-w-[1400px] mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <div className="text-gold text-xs tracking-[0.4em] mb-4">— SIGNATURE STEYKLAR</div>
+          <div className="text-gold text-xs tracking-[0.4em] mb-4">— SIGNATURE TAOMLAR</div>
           <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-cream">
-            Bizning <span className="italic text-gradient-ember">ifrat</span>imiz
+            Bizning <span className="italic text-gradient-ember">iftixor</span>imiz
           </h2>
           <div className="gold-divider w-24 mx-auto mt-6" />
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-10">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {featured.map((d, i) => (
             <motion.div
               key={d.id}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: i * 0.15 }}
-              className="group relative overflow-hidden border border-border hover:border-primary/60 transition-all"
+              transition={{ duration: 0.7, delay: (i % 3) * 0.12 }}
+              className="group relative overflow-hidden border border-border hover:border-primary/60 transition-all bg-card"
             >
-              <div className="aspect-[4/5] overflow-hidden">
-                <img
-                  src={d.image}
-                  alt={d.name}
-                  className="h-full w-full object-cover transition-transform duration-[1.4s] group-hover:scale-110"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+              <div className="relative aspect-[4/5] overflow-hidden">
+                {d.image ? (
+                  <img
+                    src={d.image}
+                    alt={d.name}
+                    className="h-full w-full object-cover transition-transform duration-[1.4s] group-hover:scale-110"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-[hsl(0_0%_8%)] grid place-items-center">
+                    <div className="text-gold/40 text-6xl">❦</div>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-6">
-                <div className="text-gold font-accent text-sm tracking-[0.3em]">{d.weight}</div>
+                {d.weight && (
+                  <div className="text-gold font-accent text-sm tracking-[0.3em]">
+                    {d.weight}
+                  </div>
+                )}
                 <h3 className="font-display text-2xl md:text-3xl text-cream mt-1">{d.name}</h3>
-                <p className="text-cream/70 text-sm font-serif italic mt-2 line-clamp-2">{d.desc}</p>
+                <p className="text-cream/70 text-sm font-serif italic mt-2 line-clamp-2">
+                  {d.desc}
+                </p>
                 <div className="mt-4 flex justify-between items-center">
                   <div className="font-accent text-xl text-primary">{formatSom(d.price)}</div>
-                  <Link to="/bron" state={{ dish: d.id }} className="text-xs uppercase tracking-[0.2em] text-cream/80 hover:text-primary border-b border-cream/30 hover:border-primary pb-0.5">
+                  <Link
+                    to="/bron"
+                    state={{ dish: d.id }}
+                    className="text-xs uppercase tracking-[0.2em] text-cream/80 hover:text-primary border-b border-cream/30 hover:border-primary pb-0.5"
+                  >
                     Buyurtma
                   </Link>
                 </div>

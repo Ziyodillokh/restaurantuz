@@ -1,4 +1,4 @@
-import { dishes } from "@/data/menu";
+import type { Dish } from "@/data/menu";
 
 export const categoryOrder = [
   "starter",
@@ -45,21 +45,41 @@ export type PageContent =
   | { kind: "cover" }
   | { kind: "intro" }
   | { kind: "section-cover"; category: CategoryKey }
-  | { kind: "section"; category: CategoryKey; title: string; items: typeof dishes; pageNum: number; totalPages: number }
+  | {
+      kind: "section";
+      category: CategoryKey;
+      title: string;
+      items: Dish[];
+      pageNum: number;
+      totalPages: number;
+    }
   | { kind: "back" };
 
-export function buildPages(): PageContent[] {
+// how many dishes fit on one book page by category — tuned so no overflow on 540×745
+const perPage: Record<CategoryKey, number> = {
+  starter: 3,
+  soup: 3,
+  salad: 3,
+  premium: 2,
+  classic: 3,
+  burger: 3,
+  garnish: 4,
+  sauce: 4,
+  drink: 4,
+  dessert: 3,
+};
+
+export function buildPages(dishes: Dish[]): PageContent[] {
   const pages: PageContent[] = [{ kind: "cover" }, { kind: "intro" }];
 
   for (const c of categoryOrder) {
     const items = dishes.filter((d) => d.category === c);
     if (items.length === 0) continue;
 
-    // Section cover (left page) before first content page
     pages.push({ kind: "section-cover", category: c });
 
-    const size = c === "premium" || c === "classic" ? 3 : 4;
-    const chunks: typeof dishes[] = [];
+    const size = perPage[c];
+    const chunks: Dish[][] = [];
     for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
 
     chunks.forEach((chunk, idx) =>

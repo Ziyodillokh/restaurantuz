@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSettings } from "@/lib/store";
 
 const links = [
   { to: "/", label: "Bosh sahifa" },
@@ -16,6 +17,10 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const loc = useLocation();
+  const settings = useSettings();
+  const brand = settings.name.split(" ");
+  const brandFirst = brand[0] || "KUDDUS";
+  const brandRest = brand.slice(1).join(" ") || "STEAK";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
@@ -39,8 +44,9 @@ export default function Navbar() {
         <Link to="/" className="flex items-center gap-2 group">
           <Flame className="h-6 w-6 text-primary group-hover:animate-flicker" />
           <div className="leading-none">
-            <div className="font-display text-xl tracking-wider text-cream">
-              KUDDUS<span className="text-primary"> STEAK</span>
+            <div className="font-display text-xl tracking-wider text-cream uppercase">
+              {brandFirst}
+              <span className="text-primary"> {brandRest}</span>
             </div>
             <div className="text-[9px] tracking-[0.3em] text-gold mt-0.5">EST · 2014</div>
           </div>
@@ -107,7 +113,9 @@ export default function Navbar() {
           <Link to="/bron" className="bg-primary text-cream py-3 text-center uppercase tracking-widest text-sm">
             Stol band qilish
           </Link>
-          <a href="tel:+998712001414" className="text-gold text-sm tracking-wider">+998 71 200 14 14</a>
+          <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="text-gold text-sm tracking-wider">
+            {settings.phone}
+          </a>
         </div>
       </div>
     </header>

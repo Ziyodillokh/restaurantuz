@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
 import { MapPin, Phone, Clock } from "lucide-react";
-import { branches } from "@/data/menu";
+import { useBranches, useSettings } from "@/lib/store";
 
 export default function BranchesSection() {
+  const branches = useBranches();
+  const settings = useSettings();
+
   return (
     <section className="py-24 md:py-32 bg-background">
       <div className="container-px max-w-[1400px] mx-auto">
@@ -25,19 +28,40 @@ export default function BranchesSection() {
                 transition={{ delay: i * 0.1, duration: 0.6 }}
                 className="group flex gap-5 p-5 border border-border hover:border-primary/60 hover:shadow-ember/30 hover:-translate-y-1 transition-all bg-card"
               >
-                <div className="w-28 h-28 shrink-0 overflow-hidden">
-                  <img src={b.image} alt={b.name} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                <div className="w-28 h-28 shrink-0 overflow-hidden bg-[hsl(0_0%_10%)]">
+                  {b.image ? (
+                    <img
+                      src={b.image}
+                      alt={b.name}
+                      className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="h-full w-full grid place-items-center text-gold/40 text-3xl">
+                      ❦
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-display text-xl text-cream">{b.name}</h3>
                   <div className="mt-2 space-y-1.5 text-sm text-cream/70">
-                    <div className="flex items-start gap-2"><MapPin className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" /> {b.address}</div>
-                    <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-primary shrink-0" /> Har kuni 11:00 — 00:00</div>
-                    <a href={`tel:${b.phone.replace(/\s/g, "")}`} className="flex items-center gap-2 hover:text-primary"><Phone className="h-3.5 w-3.5 text-primary shrink-0" /> {b.phone}</a>
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" /> {b.address}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3.5 w-3.5 text-primary shrink-0" /> {settings.hours}
+                    </div>
+                    <a
+                      href={`tel:${b.phone.replace(/\s/g, "")}`}
+                      className="flex items-center gap-2 hover:text-primary"
+                    >
+                      <Phone className="h-3.5 w-3.5 text-primary shrink-0" /> {b.phone}
+                    </a>
                   </div>
                   <a
                     href={`https://www.google.com/maps?q=${b.coords[0]},${b.coords[1]}`}
-                    target="_blank" rel="noreferrer"
+                    target="_blank"
+                    rel="noreferrer"
                     className="inline-block mt-3 text-xs uppercase tracking-[0.2em] text-gold border-b border-gold/50 hover:border-gold pb-0.5"
                   >
                     Yo'l ko'rsatish →
@@ -45,9 +69,14 @@ export default function BranchesSection() {
                 </div>
               </motion.div>
             ))}
+            {branches.length === 0 && (
+              <div className="text-center text-cream/50 py-10 border border-dashed border-border">
+                Hozircha filiallar mavjud emas.
+              </div>
+            )}
           </div>
 
-          {/* Map placeholder (dark styled) */}
+          {/* Map */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}

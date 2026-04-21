@@ -19,6 +19,16 @@ export type Dish = {
   badge?: "chef" | "new" | "spicy" | "signature";
 };
 
+export type Branch = {
+  id: string;
+  name: string;
+  city: string;
+  address: string;
+  phone: string;
+  coords: [number, number];
+  image: string;
+};
+
 export const dishes: Dish[] = [
   // ───────── STARTERS ─────────
   { id: "carpaccio", name: "Beef Carpaccio", weight: "120g", price: 95000, category: "starter", badge: "chef",
@@ -137,12 +147,18 @@ export const dishes: Dish[] = [
     image: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=900&q=80" },
 
   // ───────── SAUCES ─────────
-  { id: "pepper", name: "Pepper Sous", price: 15000, category: "sauce", desc: "Qora murchli, kremli.", image: "" },
-  { id: "chimi", name: "Chimichurri", price: 15000, category: "sauce", desc: "Argentinaning klassik sousi.", image: "" },
-  { id: "blue", name: "Blue Cheese", price: 15000, category: "sauce", desc: "Boy, yog'li, pishloq asosida.", image: "" },
-  { id: "mush", name: "Mushroom", price: 15000, category: "sauce", desc: "Yovvoyi qo'ziqorinlar bilan.", image: "" },
-  { id: "bearnaise", name: "Béarnaise", price: 18000, category: "sauce", desc: "Tarxun va sariyog' asosida fransuz klassikasi.", image: "" },
-  { id: "bbq", name: "Smoky BBQ", price: 15000, category: "sauce", desc: "Tutun ta'mli, shirin va achchiq.", image: "" },
+  { id: "pepper", name: "Pepper Sous", price: 15000, category: "sauce", desc: "Qora murchli, kremli.",
+    image: "https://images.unsplash.com/photo-1472476443507-c7a5948772fc?auto=format&fit=crop&w=600&q=80" },
+  { id: "chimi", name: "Chimichurri", price: 15000, category: "sauce", desc: "Argentinaning klassik sousi.",
+    image: "https://images.unsplash.com/photo-1472476443507-c7a5948772fc?auto=format&fit=crop&w=600&q=80" },
+  { id: "blue", name: "Blue Cheese", price: 15000, category: "sauce", desc: "Boy, yog'li, pishloq asosida.",
+    image: "https://images.unsplash.com/photo-1452195100486-9cc805987862?auto=format&fit=crop&w=600&q=80" },
+  { id: "mush", name: "Mushroom", price: 15000, category: "sauce", desc: "Yovvoyi qo'ziqorinlar bilan.",
+    image: "https://images.unsplash.com/photo-1518992028580-6d57bd80f2bd?auto=format&fit=crop&w=600&q=80" },
+  { id: "bearnaise", name: "Béarnaise", price: 18000, category: "sauce", desc: "Tarxun va sariyog' asosida fransuz klassikasi.",
+    image: "https://images.unsplash.com/photo-1472476443507-c7a5948772fc?auto=format&fit=crop&w=600&q=80" },
+  { id: "bbq", name: "Smoky BBQ", price: 15000, category: "sauce", desc: "Tutun ta'mli, shirin va achchiq.",
+    image: "https://images.unsplash.com/photo-1608032077018-c9aad9565d29?auto=format&fit=crop&w=600&q=80" },
 
   // ───────── DRINKS ─────────
   { id: "fresh", name: "Fresh Juice", price: 35000, category: "drink",
@@ -178,7 +194,7 @@ export const dishes: Dish[] = [
     image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=900&q=80" },
 ];
 
-export const branches = [
+export const branches: Branch[] = [
   { id: "yunusobod", name: "Yunusobod filiali", city: "Toshkent", address: "Amir Temur ko'chasi, 107", phone: "+998 71 200 14 14",
     coords: [41.3614, 69.2873] as [number, number],
     image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80" },

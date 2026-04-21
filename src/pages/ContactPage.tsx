@@ -2,8 +2,10 @@ import Layout from "@/components/site/Layout";
 import { Phone, Mail, MapPin, Clock, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useSettings } from "@/lib/store";
 
 export default function ContactPage() {
+  const s = useSettings();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
@@ -29,10 +31,10 @@ export default function ContactPage() {
           <div className="grid lg:grid-cols-2 gap-12">
             <div className="space-y-6">
               {[
-                { icon: Phone, title: "Telefon", value: "+998 71 200 14 14", href: "tel:+998712001414" },
-                { icon: Mail, title: "Email", value: "info@kuddus-steak.uz", href: "mailto:info@kuddus-steak.uz" },
-                { icon: MapPin, title: "Bosh ofis", value: "Toshkent, Amir Temur ko'chasi 107" },
-                { icon: Clock, title: "Ish vaqti", value: "Har kuni 11:00 — 00:00" },
+                { icon: Phone, title: "Telefon", value: s.phone, href: `tel:${s.phone.replace(/\s/g, "")}` },
+                { icon: Mail, title: "Email", value: s.email, href: `mailto:${s.email}` },
+                { icon: MapPin, title: "Bosh ofis", value: s.address },
+                { icon: Clock, title: "Ish vaqti", value: s.hours },
               ].map((it, i) => (
                 <div key={i} className="glass-dark p-6 flex items-start gap-4 hover:border-primary/40 transition-colors">
                   <div className="h-12 w-12 grid place-items-center bg-primary/15 text-primary shrink-0">

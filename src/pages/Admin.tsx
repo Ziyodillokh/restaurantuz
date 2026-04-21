@@ -1,10 +1,61 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Routes, Route, Link, useLocation, useNavigate, Navigate } from "react-router-dom";
-import { Flame, Home, Calendar, Utensils, ListOrdered, Building2, BarChart3, Settings, LogOut, Lock, Check, X, Trash2, Plus, Search } from "lucide-react";
+import {
+  Flame,
+  Home,
+  Calendar,
+  Utensils,
+  ListOrdered,
+  Building2,
+  BarChart3,
+  Settings as SettingsIcon,
+  LogOut,
+  Lock,
+  Check,
+  X,
+  Trash2,
+  Plus,
+  Search,
+  ImagePlus,
+  Save,
+  Download,
+  Upload,
+  RotateCcw,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { motion } from "framer-motion";
-import { Reservation, getReservations, updateReservation, deleteReservation, getDishes, saveDishes } from "@/lib/store";
-import { branches, formatSom, Dish } from "@/data/menu";
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import {
+  Reservation,
+  getReservations,
+  updateReservation,
+  deleteReservation,
+  useDishes,
+  saveDishes,
+  useBranches,
+  saveBranches,
+  useSettings,
+  saveSettings,
+  getDishes,
+  getBranches,
+  getSettings,
+  resetDishes,
+  resetBranches,
+  SiteSettings,
+} from "@/lib/store";
+import { formatSom, Dish, Branch } from "@/data/menu";
+import { categoryLabels, categoryOrder, type CategoryKey } from "@/components/menu/pages";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -20,7 +71,10 @@ function useAuth() {
     }
     return false;
   };
-  const logout = () => { sessionStorage.removeItem(AUTH_KEY); setAuthed(false); };
+  const logout = () => {
+    sessionStorage.removeItem(AUTH_KEY);
+    setAuthed(false);
+  };
   return { authed, login, logout };
 }
 
@@ -33,6 +87,7 @@ export default function Admin() {
 function Login({ onLogin }: { onLogin: (u: string, p: string) => boolean }) {
   const [u, setU] = useState("admin");
   const [p, setP] = useState("");
+  const [show, setShow] = useState(false);
   const [err, setErr] = useState("");
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,28 +96,54 @@ function Login({ onLogin }: { onLogin: (u: string, p: string) => boolean }) {
   return (
     <div className="min-h-screen grid place-items-center bg-background relative overflow-hidden p-6">
       <div className="absolute inset-0 opacity-30">
-        <img src="https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=1600&q=80" className="h-full w-full object-cover blur-md" alt="" />
+        <img
+          src="https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=1600&q=80"
+          className="h-full w-full object-cover blur-md"
+          alt=""
+        />
       </div>
       <motion.form
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         onSubmit={submit}
         className="relative glass-dark p-10 w-full max-w-md"
       >
         <Link to="/" className="flex items-center gap-2 mb-8">
           <Flame className="h-7 w-7 text-primary" />
           <div>
-            <div className="font-display text-2xl text-cream">KUDDUS<span className="text-primary"> STEAK</span></div>
+            <div className="font-display text-2xl text-cream">
+              KUDDUS<span className="text-primary"> STEAK</span>
+            </div>
             <div className="text-[10px] tracking-[0.3em] text-gold">ADMIN PANEL</div>
           </div>
         </Link>
         <div className="space-y-5">
           <div>
             <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">Login</label>
-            <input value={u} onChange={(e) => setU(e.target.value)} className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary" />
+            <input
+              value={u}
+              onChange={(e) => setU(e.target.value)}
+              className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+            />
           </div>
           <div>
             <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">Parol</label>
-            <input type="password" value={p} onChange={(e) => setP(e.target.value)} className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary" />
+            <div className="relative">
+              <input
+                type={show ? "text" : "password"}
+                value={p}
+                onChange={(e) => setP(e.target.value)}
+                className="w-full bg-input border border-border text-cream px-4 py-3 pr-12 focus:outline-none focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setShow((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-cream/50 hover:text-primary"
+                aria-label="Parolni ko'rsatish"
+              >
+                {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           {err && <div className="text-destructive text-sm">{err}</div>}
           <button className="w-full py-4 bg-primary text-cream uppercase tracking-[0.3em] text-xs hover:bg-ember hover:shadow-ember transition-all flex items-center justify-center gap-2">
@@ -78,33 +159,52 @@ function Login({ onLogin }: { onLogin: (u: string, p: string) => boolean }) {
 const navItems = [
   { to: "/admin", label: "Bosh sahifa", icon: Home, end: true },
   { to: "/admin/bronlar", label: "Bronlar", icon: Calendar },
-  { to: "/admin/buyurtmalar", label: "Buyurtmalar", icon: ListOrdered },
+  { to: "/admin/buyurtmalar", label: "Stol xaritasi", icon: ListOrdered },
   { to: "/admin/menyu", label: "Menyu", icon: Utensils },
   { to: "/admin/filiallar", label: "Filiallar", icon: Building2 },
   { to: "/admin/statistika", label: "Statistika", icon: BarChart3 },
-  { to: "/admin/sozlamalar", label: "Sozlamalar", icon: Settings },
+  { to: "/admin/sozlamalar", label: "Sozlamalar", icon: SettingsIcon },
 ];
 
 function Shell({ onLogout }: { onLogout: () => void }) {
   const loc = useLocation();
   const nav = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => setMobileOpen(false), [loc.pathname]);
+
   return (
     <div className="min-h-screen flex bg-background text-cream">
-      <aside className="w-64 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col">
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "w-64 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col z-40",
+          "fixed lg:static inset-y-0 left-0 transition-transform duration-300",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
         <Link to="/" className="flex items-center gap-2 p-6 border-b border-sidebar-border">
           <Flame className="h-6 w-6 text-primary" />
           <div className="leading-tight">
-            <div className="font-display text-lg text-cream">KUDDUS<span className="text-primary"> STEAK</span></div>
+            <div className="font-display text-lg text-cream">
+              KUDDUS<span className="text-primary"> STEAK</span>
+            </div>
             <div className="text-[9px] tracking-[0.3em] text-gold">ADMIN</div>
           </div>
         </Link>
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {navItems.map((it) => {
             const active = it.end ? loc.pathname === it.to : loc.pathname.startsWith(it.to);
             return (
-              <Link key={it.to} to={it.to}
-                className={cn("flex items-center gap-3 px-4 py-3 text-sm rounded transition-colors",
-                  active ? "bg-primary/15 text-primary border-l-2 border-primary" : "text-cream/70 hover:bg-sidebar-accent hover:text-cream")}
+              <Link
+                key={it.to}
+                to={it.to}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 text-sm rounded transition-colors",
+                  active
+                    ? "bg-primary/15 text-primary border-l-2 border-primary"
+                    : "text-cream/70 hover:bg-sidebar-accent hover:text-cream"
+                )}
               >
                 <it.icon className="h-4 w-4" />
                 {it.label}
@@ -112,12 +212,40 @@ function Shell({ onLogout }: { onLogout: () => void }) {
             );
           })}
         </nav>
-        <button onClick={() => { onLogout(); nav("/"); }} className="m-3 px-4 py-3 text-sm flex items-center gap-3 text-cream/70 hover:bg-sidebar-accent rounded">
+        <button
+          onClick={() => {
+            onLogout();
+            nav("/");
+          }}
+          className="m-3 px-4 py-3 text-sm flex items-center gap-3 text-cream/70 hover:bg-sidebar-accent rounded"
+        >
           <LogOut className="h-4 w-4" /> Chiqish
         </button>
       </aside>
 
-      <main className="flex-1 overflow-x-hidden">
+      {/* Backdrop for mobile */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <main className="flex-1 overflow-x-hidden min-w-0">
+        {/* Mobile top bar */}
+        <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="h-10 w-10 grid place-items-center border border-border rounded"
+            aria-label="Menyu"
+          >
+            <ListOrdered className="h-4 w-4" />
+          </button>
+          <div className="font-display text-sm text-cream">
+            KUDDUS<span className="text-primary"> STEAK</span>
+          </div>
+        </div>
+
         <Routes>
           <Route index element={<Dashboard />} />
           <Route path="bronlar" element={<Bookings />} />
@@ -125,7 +253,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           <Route path="menyu" element={<MenuAdmin />} />
           <Route path="filiallar" element={<BranchesAdmin />} />
           <Route path="statistika" element={<Stats />} />
-          <Route path="sozlamalar" element={<Sett />} />
+          <Route path="sozlamalar" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/admin" />} />
         </Routes>
       </main>
@@ -133,48 +261,91 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-function PageHeader({ title, sub }: { title: string; sub?: string }) {
+function PageHeader({
+  title,
+  sub,
+  action,
+}: {
+  title: string;
+  sub?: string;
+  action?: React.ReactNode;
+}) {
   return (
-    <div className="px-8 pt-8 pb-4 border-b border-border">
-      <div className="text-gold text-[10px] tracking-[0.4em]">— ADMIN</div>
-      <h1 className="font-display text-3xl text-cream mt-1">{title}</h1>
-      {sub && <p className="text-cream/60 text-sm mt-1">{sub}</p>}
+    <div className="px-6 md:px-8 pt-8 pb-4 border-b border-border flex items-end justify-between gap-4 flex-wrap">
+      <div>
+        <div className="text-gold text-[10px] tracking-[0.4em]">— ADMIN</div>
+        <h1 className="font-display text-2xl md:text-3xl text-cream mt-1">{title}</h1>
+        {sub && <p className="text-cream/60 text-sm mt-1">{sub}</p>}
+      </div>
+      {action}
     </div>
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function Stat({
+  label,
+  value,
+  accent,
+  hint,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+  hint?: string;
+}) {
   return (
-    <div className={cn("p-6 border", accent ? "border-primary/40 bg-primary/5" : "border-border bg-card")}>
+    <div
+      className={cn(
+        "p-5 md:p-6 border",
+        accent ? "border-primary/40 bg-primary/5" : "border-border bg-card"
+      )}
+    >
       <div className="text-[10px] tracking-[0.3em] text-cream/60 uppercase">{label}</div>
-      <div className={cn("font-accent text-4xl mt-3", accent ? "text-primary" : "text-cream")}>{value}</div>
+      <div className={cn("font-accent text-3xl md:text-4xl mt-3", accent ? "text-primary" : "text-cream")}>
+        {value}
+      </div>
+      {hint && <div className="text-xs text-cream/50 mt-2">{hint}</div>}
     </div>
   );
 }
 
+/* ─────────────────────── DASHBOARD ─────────────────────── */
 function Dashboard() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  useEffect(() => setReservations(getReservations()), []);
-  const today = new Date().toISOString().slice(0, 10);
-  const todayCount = reservations.filter((r) => r.date === today).length;
-  const pending = reservations.filter((r) => r.status === "yangi").length;
-  const revenue = reservations.filter((r) => r.status === "tasdiqlangan").length * 750000;
+  const dishes = useDishes();
+  const branches = useBranches();
 
-  // chart
+  useEffect(() => {
+    setReservations(getReservations());
+  }, []);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const todayList = reservations.filter((r) => r.date === today);
+  const pending = reservations.filter((r) => r.status === "yangi").length;
+  const confirmed = reservations.filter((r) => r.status === "tasdiqlangan");
+  const avgCheck = 450000;
+  const todayRevenue = confirmed.filter((r) => r.date === today).reduce((s, r) => s + r.guests * avgCheck, 0);
+  const totalGuests = todayList.reduce((s, r) => s + r.guests, 0);
+
   const chart = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(Date.now() - (6 - i) * 86400000).toISOString().slice(0, 10);
-    return { day: ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"][new Date(d).getDay()], bron: reservations.filter((r) => r.date === d).length || Math.floor(Math.random() * 15) + 5 };
+    const day = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"][new Date(d).getDay()];
+    return { day, bron: reservations.filter((r) => r.date === d).length };
   });
 
   return (
     <>
       <PageHeader title="Bosh sahifa" sub="Bugungi faoliyat ko'rinishi" />
-      <div className="p-8 space-y-8">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <Stat label="Bugungi bronlar" value={String(todayCount || 24)} accent />
-          <Stat label="Kutilayotgan" value={String(pending)} />
-          <Stat label="Bugungi tushum" value={formatSom(revenue || 12450000)} />
-          <Stat label="Band stollar" value="16/40" />
+      <div className="p-6 md:p-8 space-y-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+          <Stat label="Bugungi bronlar" value={String(todayList.length)} accent hint={`${totalGuests} mehmon`} />
+          <Stat label="Kutilayotgan" value={String(pending)} hint="tasdiq kerak" />
+          <Stat label="Bugungi tushum (taxminiy)" value={formatSom(todayRevenue)} />
+          <Stat
+            label="Umumiy ma'lumot"
+            value={`${dishes.length} · ${branches.length}`}
+            hint="taom · filial"
+          />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -186,9 +357,15 @@ function Dashboard() {
                 <LineChart data={chart}>
                   <CartesianGrid stroke="hsl(0 0% 15%)" vertical={false} />
                   <XAxis dataKey="day" stroke="hsl(0 0% 50%)" fontSize={12} />
-                  <YAxis stroke="hsl(0 0% 50%)" fontSize={12} />
+                  <YAxis stroke="hsl(0 0% 50%)" fontSize={12} allowDecimals={false} />
                   <Tooltip contentStyle={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 20%)" }} />
-                  <Line type="monotone" dataKey="bron" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))", r: 4 }} />
+                  <Line
+                    type="monotone"
+                    dataKey="bron"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -196,16 +373,24 @@ function Dashboard() {
 
           <div className="border border-border bg-card p-6">
             <h3 className="font-display text-xl text-cream mb-4">Oxirgi faoliyat</h3>
-            <ul className="space-y-3 text-sm">
-              {reservations.slice(0, 8).map((r) => (
-                <li key={r.id} className="flex items-center justify-between border-b border-border/60 pb-2 last:border-0">
-                  <div>
-                    <div className="text-cream">{r.name}</div>
-                    <div className="text-xs text-cream/50">{r.date} · {r.time}</div>
+            <ul className="space-y-3 text-sm max-h-80 overflow-y-auto pr-1">
+              {reservations.slice(0, 10).map((r) => (
+                <li
+                  key={r.id}
+                  className="flex items-center justify-between border-b border-border/60 pb-2 last:border-0 gap-2"
+                >
+                  <div className="min-w-0">
+                    <div className="text-cream truncate">{r.name}</div>
+                    <div className="text-xs text-cream/50">
+                      {r.date} · {r.time} · {r.guests} meh.
+                    </div>
                   </div>
                   <StatusBadge s={r.status} />
                 </li>
               ))}
+              {reservations.length === 0 && (
+                <li className="text-cream/50 text-center py-6">Bronlar yo'q</li>
+              )}
             </ul>
           </div>
         </div>
@@ -221,20 +406,30 @@ function StatusBadge({ s }: { s: Reservation["status"] }) {
     bekor: "bg-muted text-cream/50 border-border",
   };
   const label = { yangi: "Yangi", tasdiqlangan: "Tasdiqlangan", bekor: "Bekor qilingan" };
-  return <span className={cn("text-[10px] uppercase tracking-[0.2em] border px-2 py-1", map[s])}>{label[s]}</span>;
+  return (
+    <span className={cn("text-[10px] uppercase tracking-[0.2em] border px-2 py-1 whitespace-nowrap", map[s])}>
+      {label[s]}
+    </span>
+  );
 }
 
+/* ─────────────────────── BOOKINGS ─────────────────────── */
 function Bookings() {
+  const branches = useBranches();
   const [list, setList] = useState<Reservation[]>([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [branch, setBranch] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("");
+
   useEffect(() => setList(getReservations()), []);
 
-  const filtered = list.filter((r) =>
-    (status === "all" || r.status === status) &&
-    (branch === "all" || r.branchId === branch) &&
-    (q === "" || r.name.toLowerCase().includes(q.toLowerCase()) || r.phone.includes(q))
+  const filtered = list.filter(
+    (r) =>
+      (status === "all" || r.status === status) &&
+      (branch === "all" || r.branchId === branch) &&
+      (dateFilter === "" || r.date === dateFilter) &&
+      (q === "" || r.name.toLowerCase().includes(q.toLowerCase()) || r.phone.includes(q))
   );
 
   const setS = (id: string, s: Reservation["status"]) => {
@@ -242,33 +437,70 @@ function Bookings() {
     toast.success("Status yangilandi");
   };
   const del = (id: string) => {
+    if (!confirm("Ushbu bronni o'chirishni tasdiqlaysizmi?")) return;
     setList(deleteReservation(id));
     toast.success("O'chirildi");
   };
 
   return (
     <>
-      <PageHeader title="Bronlar" sub={`Jami: ${list.length}`} />
-      <div className="p-8 space-y-5">
+      <PageHeader title="Bronlar" sub={`Jami: ${list.length} · Ko'rsatilmoqda: ${filtered.length}`} />
+      <div className="p-6 md:p-8 space-y-5">
         <div className="flex flex-wrap gap-3 items-center">
           <div className="relative flex-1 min-w-[220px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cream/50" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ism yoki telefon..." className="w-full bg-input border border-border text-cream pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary text-sm" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Ism yoki telefon..."
+              className="w-full bg-input border border-border text-cream pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary text-sm"
+            />
           </div>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className="bg-input border border-border text-cream px-4 py-2.5 text-sm">
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="bg-input border border-border text-cream px-4 py-2.5 text-sm"
+          >
             <option value="all">Barcha statuslar</option>
             <option value="yangi">Yangi</option>
             <option value="tasdiqlangan">Tasdiqlangan</option>
             <option value="bekor">Bekor</option>
           </select>
-          <select value={branch} onChange={(e) => setBranch(e.target.value)} className="bg-input border border-border text-cream px-4 py-2.5 text-sm">
+          <select
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
+            className="bg-input border border-border text-cream px-4 py-2.5 text-sm"
+          >
             <option value="all">Barcha filiallar</option>
-            {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
           </select>
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="bg-input border border-border text-cream px-4 py-2.5 text-sm"
+          />
+          {(status !== "all" || branch !== "all" || dateFilter || q) && (
+            <button
+              onClick={() => {
+                setStatus("all");
+                setBranch("all");
+                setDateFilter("");
+                setQ("");
+              }}
+              className="text-cream/60 hover:text-primary text-xs underline"
+            >
+              Tozalash
+            </button>
+          )}
         </div>
 
-        <div className="border border-border overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="border border-border overflow-x-auto">
+          <table className="w-full text-sm min-w-[720px]">
             <thead className="bg-muted/40 text-cream/60 text-xs uppercase tracking-wider">
               <tr>
                 <th className="text-left p-3">Mijoz</th>
@@ -288,21 +520,50 @@ function Bookings() {
                     <div className="text-xs text-cream/50">{r.id}</div>
                   </td>
                   <td className="p-3 hidden md:table-cell text-cream/70">{r.phone}</td>
-                  <td className="p-3 text-cream/80">{r.date}<div className="text-xs text-cream/50">{r.time}</div></td>
-                  <td className="p-3 hidden lg:table-cell text-cream/70">{branches.find((b) => b.id === r.branchId)?.name}</td>
+                  <td className="p-3 text-cream/80">
+                    {r.date}
+                    <div className="text-xs text-cream/50">{r.time}</div>
+                  </td>
+                  <td className="p-3 hidden lg:table-cell text-cream/70">
+                    {branches.find((b) => b.id === r.branchId)?.name || "—"}
+                  </td>
                   <td className="p-3 text-cream font-accent">{r.guests}</td>
-                  <td className="p-3"><StatusBadge s={r.status} /></td>
+                  <td className="p-3">
+                    <StatusBadge s={r.status} />
+                  </td>
                   <td className="p-3">
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => setS(r.id, "tasdiqlangan")} className="h-8 w-8 grid place-items-center hover:bg-primary/15 hover:text-primary" title="Tasdiqlash"><Check className="h-4 w-4" /></button>
-                      <button onClick={() => setS(r.id, "bekor")} className="h-8 w-8 grid place-items-center hover:bg-destructive/15 hover:text-destructive" title="Bekor"><X className="h-4 w-4" /></button>
-                      <button onClick={() => del(r.id)} className="h-8 w-8 grid place-items-center hover:bg-destructive/15 hover:text-destructive" title="O'chirish"><Trash2 className="h-4 w-4" /></button>
+                      <button
+                        onClick={() => setS(r.id, "tasdiqlangan")}
+                        className="h-8 w-8 grid place-items-center hover:bg-primary/15 hover:text-primary rounded"
+                        title="Tasdiqlash"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setS(r.id, "bekor")}
+                        className="h-8 w-8 grid place-items-center hover:bg-destructive/15 hover:text-destructive rounded"
+                        title="Bekor"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => del(r.id)}
+                        className="h-8 w-8 grid place-items-center hover:bg-destructive/15 hover:text-destructive rounded"
+                        title="O'chirish"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={7} className="p-8 text-center text-cream/50">Hech narsa topilmadi</td></tr>
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-cream/50">
+                    Hech narsa topilmadi
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -312,131 +573,807 @@ function Bookings() {
   );
 }
 
+/* ─────────────────────── ORDERS (table map) ─────────────────────── */
 function Orders() {
-  const tables = Array.from({ length: 24 }, (_, i) => ({
-    n: i + 1,
-    state: (["bo'sh", "band", "kutmoqda", "xizmat"] as const)[(i * 7) % 4],
-  }));
-  const stateClass = {
+  // Visual hall map. Tables derive their state from today's confirmed reservations
+  // cycled onto 24 tables — so it reflects admin actions.
+  const branches = useBranches();
+  const [branchId, setBranchId] = useState<string>(branches[0]?.id || "");
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+
+  useEffect(() => setReservations(getReservations()), []);
+  useEffect(() => {
+    if (!branchId && branches[0]) setBranchId(branches[0].id);
+  }, [branches, branchId]);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const todayRes = reservations.filter(
+    (r) => r.date === today && r.branchId === branchId && r.status !== "bekor"
+  );
+
+  const tables = Array.from({ length: 24 }, (_, i) => {
+    const n = i + 1;
+    const res = todayRes[i];
+    const state: "bo'sh" | "band" | "kutmoqda" | "xizmat" = res
+      ? res.status === "tasdiqlangan"
+        ? "band"
+        : "kutmoqda"
+      : i % 7 === 3
+      ? "xizmat"
+      : "bo'sh";
+    return { n, state, res };
+  });
+
+  const stateClass: Record<"bo'sh" | "band" | "kutmoqda" | "xizmat", string> = {
     "bo'sh": "border-border text-cream/40",
-    "band": "border-primary/60 bg-primary/15 text-primary",
-    "kutmoqda": "border-gold/60 bg-gold/15 text-gold",
-    "xizmat": "border-ember/60 bg-ember/15 text-ember",
+    band: "border-primary/60 bg-primary/15 text-primary",
+    kutmoqda: "border-gold/60 bg-gold/15 text-gold",
+    xizmat: "border-ember/60 bg-ember/15 text-ember",
   };
+
   return (
     <>
-      <PageHeader title="Buyurtmalar" sub="Restoran zal ko'rinishi" />
-      <div className="p-8">
-        <div className="flex gap-4 mb-6 text-xs">
-          {(Object.keys(stateClass) as Array<keyof typeof stateClass>).map((k) => (
-            <div key={k} className={cn("px-3 py-1.5 border uppercase tracking-wider", stateClass[k])}>{k}</div>
-          ))}
+      <PageHeader title="Stol xaritasi" sub={`Bugun: ${todayRes.length} ta faol bron`} />
+      <div className="p-6 md:p-8">
+        <div className="flex flex-wrap gap-3 mb-6 items-center">
+          <select
+            value={branchId}
+            onChange={(e) => setBranchId(e.target.value)}
+            className="bg-input border border-border text-cream px-4 py-2.5 text-sm"
+          >
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+          <div className="flex gap-2 text-xs flex-wrap">
+            {(Object.keys(stateClass) as Array<keyof typeof stateClass>).map((k) => (
+              <div key={k} className={cn("px-3 py-1.5 border uppercase tracking-wider", stateClass[k])}>
+                {k}
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="border border-border bg-card p-6 md:p-10">
-          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-4">
+
+        <div className="border border-border bg-card p-4 md:p-8">
+          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
             {tables.map((t) => (
-              <button key={t.n} className={cn("aspect-square border-2 grid place-items-center font-accent text-2xl transition-all hover:scale-105", stateClass[t.state])}>
+              <button
+                key={t.n}
+                title={t.res ? `${t.res.name} · ${t.res.time} · ${t.res.guests} meh.` : `Stol ${t.n}`}
+                className={cn(
+                  "aspect-square border-2 grid place-items-center font-accent text-xl md:text-2xl transition-all hover:scale-105 relative",
+                  stateClass[t.state]
+                )}
+              >
                 {t.n}
+                {t.res && (
+                  <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[9px] font-sans font-medium whitespace-nowrap">
+                    {t.res.time}
+                  </span>
+                )}
               </button>
             ))}
           </div>
-          <div className="mt-8 text-center text-sm text-cream/60">Stol holatini ko'rish va boshqarish uchun bosing</div>
+          <div className="mt-6 text-center text-xs text-cream/60">
+            Stol holati bugungi bronlardan avtomatik olinadi. Tafsilot uchun bosing.
+          </div>
         </div>
       </div>
     </>
   );
 }
 
+/* ─────────────────────── MENU ADMIN ─────────────────────── */
 function MenuAdmin() {
-  const [list, setList] = useState<Dish[]>([]);
-  useEffect(() => setList(getDishes()), []);
-  const update = (id: string, patch: Partial<Dish>) => {
-    const next = list.map((d) => d.id === id ? { ...d, ...patch } : d);
-    setList(next); saveDishes(next);
-  };
-  const del = (id: string) => {
-    const next = list.filter((d) => d.id !== id);
-    setList(next); saveDishes(next); toast.success("Taom o'chirildi");
-  };
+  const list = useDishes();
+  const [q, setQ] = useState("");
+  const [cat, setCat] = useState<string>("all");
+  const [editing, setEditing] = useState<Dish | null>(null);
+
+  const filtered = useMemo(
+    () =>
+      list.filter(
+        (d) =>
+          (cat === "all" || d.category === cat) &&
+          (q === "" || d.name.toLowerCase().includes(q.toLowerCase()))
+      ),
+    [list, q, cat]
+  );
+
   const add = () => {
-    const d: Dish = { id: "new" + Date.now(), name: "Yangi taom", price: 100000, desc: "Ta'rif...", category: "premium", image: "", weight: "300g" };
-    const next = [d, ...list];
-    setList(next); saveDishes(next);
+    const d: Dish = {
+      id: "dish-" + Date.now(),
+      name: "Yangi taom",
+      price: 100000,
+      desc: "Ta'rifni kiriting...",
+      category: "premium",
+      image: "",
+      weight: "",
+    };
+    saveDishes([d, ...list]);
+    setEditing(d);
   };
+
+  const del = (id: string) => {
+    if (!confirm("Ushbu taomni o'chirishni tasdiqlaysizmi?")) return;
+    saveDishes(list.filter((d) => d.id !== id));
+    toast.success("Taom o'chirildi");
+  };
+
+  const duplicate = (d: Dish) => {
+    const copy: Dish = { ...d, id: "dish-" + Date.now(), name: d.name + " (nusxa)" };
+    saveDishes([copy, ...list]);
+    toast.success("Nusxa qo'shildi");
+  };
+
+  const saveEdit = (d: Dish) => {
+    saveDishes(list.map((x) => (x.id === d.id ? d : x)));
+    toast.success("Saqlandi");
+    setEditing(null);
+  };
+
   return (
     <>
-      <PageHeader title="Menyu boshqaruvi" sub={`${list.length} ta taom`} />
-      <div className="p-8 space-y-5">
-        <button onClick={add} className="px-5 py-2.5 bg-primary text-cream text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-ember">
-          <Plus className="h-4 w-4" /> Yangi qo'shish
-        </button>
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {list.map((d) => (
-            <div key={d.id} className="border border-border bg-card p-5 space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <input value={d.name} onChange={(e) => update(d.id, { name: e.target.value })}
-                  className="font-display text-xl bg-transparent text-cream focus:outline-none focus:border-b focus:border-primary flex-1" />
-                <button onClick={() => del(d.id)} className="text-cream/40 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+      <PageHeader
+        title="Menyu boshqaruvi"
+        sub={`${list.length} ta taom · Ko'rsatilmoqda: ${filtered.length}`}
+        action={
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (confirm("Menyuni boshlang'ich holatiga qaytarasizmi? Barcha o'zgarishlar yo'qoladi.")) {
+                  resetDishes();
+                  toast.success("Menyu qayta tiklandi");
+                }
+              }}
+              className="px-4 py-2.5 border border-border text-cream text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-muted"
+              title="Standart menyuga qaytarish"
+            >
+              <RotateCcw className="h-3.5 w-3.5" /> Qayta tiklash
+            </button>
+            <button
+              onClick={add}
+              className="px-5 py-2.5 bg-primary text-cream text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-ember"
+            >
+              <Plus className="h-4 w-4" /> Yangi qo'shish
+            </button>
+          </div>
+        }
+      />
+      <div className="p-6 md:p-8 space-y-5">
+        <div className="flex flex-wrap gap-3 items-center">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cream/50" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Taom nomidan izlash..."
+              className="w-full bg-input border border-border text-cream pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary text-sm"
+            />
+          </div>
+          <select
+            value={cat}
+            onChange={(e) => setCat(e.target.value)}
+            className="bg-input border border-border text-cream px-4 py-2.5 text-sm"
+          >
+            <option value="all">Barcha kategoriyalar</option>
+            {categoryOrder.map((c) => (
+              <option key={c} value={c}>
+                {categoryLabels[c]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtered.map((d) => (
+            <div key={d.id} className="border border-border bg-card overflow-hidden flex flex-col">
+              <div className="h-44 bg-[hsl(0_0%_10%)] relative overflow-hidden">
+                {d.image ? (
+                  <img
+                    src={d.image}
+                    alt={d.name}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="h-full w-full grid place-items-center text-gold/30 text-5xl">❦</div>
+                )}
+                {d.badge && (
+                  <div className="absolute top-2 left-2 px-2 py-1 text-[9px] tracking-[0.2em] uppercase bg-primary/90 text-cream">
+                    {d.badge === "chef"
+                      ? "Chef's"
+                      : d.badge === "signature"
+                      ? "Signature"
+                      : d.badge === "new"
+                      ? "Yangi"
+                      : "Achchiq"}
+                  </div>
+                )}
               </div>
-              <textarea value={d.desc} onChange={(e) => update(d.id, { desc: e.target.value })}
-                rows={2} className="w-full text-sm bg-input border border-border text-cream/80 px-3 py-2 focus:outline-none focus:border-primary resize-none" />
-              <div className="grid grid-cols-3 gap-2">
-                <input value={d.weight || ""} onChange={(e) => update(d.id, { weight: e.target.value })} placeholder="Vazn" className="bg-input border border-border text-cream px-3 py-2 text-sm" />
-                <input value={d.price} type="number" onChange={(e) => update(d.id, { price: Number(e.target.value) })} className="bg-input border border-border text-cream px-3 py-2 text-sm font-accent" />
-                <select value={d.category} onChange={(e) => update(d.id, { category: e.target.value as Dish["category"] })} className="bg-input border border-border text-cream px-2 py-2 text-sm">
-                  <option value="premium">Premium</option>
-                  <option value="classic">Klassik</option>
-                  <option value="garnish">Garnir</option>
-                  <option value="sauce">Sous</option>
-                  <option value="drink">Ichimlik</option>
-                  <option value="dessert">Shirinlik</option>
-                </select>
+              <div className="p-4 flex-1 flex flex-col">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-display text-lg text-cream line-clamp-1">{d.name}</h3>
+                  <div className="font-accent text-primary text-sm whitespace-nowrap">
+                    {formatSom(d.price)}
+                  </div>
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.25em] text-gold/80 mt-1">
+                  {categoryLabels[d.category as CategoryKey]}
+                  {d.weight && <span className="text-cream/40"> · {d.weight}</span>}
+                </div>
+                <p className="text-cream/60 text-sm mt-2 line-clamp-2 flex-1">{d.desc}</p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => setEditing(d)}
+                    className="flex-1 py-2 text-xs uppercase tracking-[0.2em] bg-primary/15 text-primary hover:bg-primary hover:text-cream transition-all"
+                  >
+                    Tahrirlash
+                  </button>
+                  <button
+                    onClick={() => duplicate(d)}
+                    className="h-9 w-9 grid place-items-center border border-border text-cream/70 hover:text-primary hover:border-primary"
+                    title="Nusxalash"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => del(d.id)}
+                    className="h-9 w-9 grid place-items-center border border-border text-cream/70 hover:text-destructive hover:border-destructive"
+                    title="O'chirish"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
-              <input value={d.image} onChange={(e) => update(d.id, { image: e.target.value })} placeholder="Rasm URL" className="w-full bg-input border border-border text-cream/70 px-3 py-2 text-xs" />
             </div>
           ))}
+          {filtered.length === 0 && (
+            <div className="col-span-full text-center text-cream/50 py-16 border border-dashed border-border">
+              Hech narsa topilmadi
+            </div>
+          )}
         </div>
       </div>
+
+      {editing && <DishEditor dish={editing} onClose={() => setEditing(null)} onSave={saveEdit} />}
     </>
   );
 }
 
+/* Image picker: URL or file upload (converts to data URL). */
+function ImageField({
+  value,
+  onChange,
+  aspect = "aspect-[4/3]",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  aspect?: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const onFile = (f: File) => {
+    if (f.size > 3 * 1024 * 1024) {
+      toast.error("Rasm hajmi 3MB dan oshmasligi kerak");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => onChange(String(reader.result || ""));
+    reader.readAsDataURL(f);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div
+        className={cn("relative border border-border bg-[hsl(0_0%_10%)] overflow-hidden", aspect)}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const f = e.dataTransfer.files?.[0];
+          if (f) onFile(f);
+        }}
+      >
+        {value ? (
+          <>
+            <img src={value} alt="" className="h-full w-full object-cover" />
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="absolute top-2 right-2 h-8 w-8 grid place-items-center bg-background/80 text-cream hover:text-destructive rounded"
+              title="O'chirish"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="h-full w-full grid place-items-center text-cream/50 hover:text-primary"
+          >
+            <div className="text-center">
+              <ImagePlus className="h-8 w-8 mx-auto" />
+              <div className="text-xs mt-2 tracking-[0.2em] uppercase">Rasm tanlang</div>
+              <div className="text-[10px] mt-1 text-cream/40">yoki fayl sudrab qo'ying</div>
+            </div>
+          </button>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onFile(f);
+            e.target.value = "";
+          }}
+        />
+      </div>
+      <div className="flex gap-2">
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Yoki rasm URL manzili"
+          className="flex-1 bg-input border border-border text-cream/80 px-3 py-2 text-xs focus:outline-none focus:border-primary"
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="px-3 py-2 border border-border text-cream/70 hover:text-primary text-xs flex items-center gap-1"
+        >
+          <Upload className="h-3 w-3" /> Fayl
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DishEditor({
+  dish,
+  onClose,
+  onSave,
+}: {
+  dish: Dish;
+  onClose: () => void;
+  onSave: (d: Dish) => void;
+}) {
+  const [d, setD] = useState<Dish>(dish);
+
+  const set = <K extends keyof Dish>(k: K, v: Dish[K]) => setD((p) => ({ ...p, [k]: v }));
+
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 grid place-items-center p-4 overflow-y-auto">
+      <div className="bg-card border border-border w-full max-w-2xl my-8">
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <div>
+            <div className="text-gold text-[10px] tracking-[0.4em]">— TAOM TAHRIRI</div>
+            <h2 className="font-display text-xl text-cream mt-1">{d.name || "Yangi taom"}</h2>
+          </div>
+          <button onClick={onClose} className="h-9 w-9 grid place-items-center hover:bg-muted rounded">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+          <ImageField value={d.image} onChange={(v) => set("image", v)} aspect="aspect-video" />
+
+          <div>
+            <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+              Taom nomi
+            </label>
+            <input
+              value={d.name}
+              onChange={(e) => set("name", e.target.value)}
+              className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+              Ta'rif
+            </label>
+            <textarea
+              value={d.desc}
+              onChange={(e) => set("desc", e.target.value)}
+              rows={3}
+              className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary resize-none"
+            />
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-3">
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+                Narx (so'm)
+              </label>
+              <input
+                type="number"
+                value={d.price}
+                onChange={(e) => set("price", Number(e.target.value))}
+                className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary font-accent"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+                Vazn / o'lcham
+              </label>
+              <input
+                value={d.weight || ""}
+                onChange={(e) => set("weight", e.target.value)}
+                placeholder="300g"
+                className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+                Kategoriya
+              </label>
+              <select
+                value={d.category}
+                onChange={(e) => set("category", e.target.value as Dish["category"])}
+                className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+              >
+                {categoryOrder.map((c) => (
+                  <option key={c} value={c}>
+                    {categoryLabels[c]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+              Belgi (ixtiyoriy)
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { v: undefined, l: "Yo'q" },
+                { v: "chef", l: "Chef's Pick" },
+                { v: "signature", l: "Signature" },
+                { v: "new", l: "Yangi" },
+                { v: "spicy", l: "Achchiq" },
+              ].map((b) => (
+                <button
+                  key={String(b.v)}
+                  type="button"
+                  onClick={() => set("badge", b.v as Dish["badge"])}
+                  className={cn(
+                    "px-3 py-2 text-xs uppercase tracking-[0.2em] border transition-all",
+                    d.badge === b.v
+                      ? "bg-primary border-primary text-cream"
+                      : "bg-transparent border-border text-cream/70 hover:border-primary"
+                  )}
+                >
+                  {b.l}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="p-5 border-t border-border flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 border border-border text-cream/80 text-xs uppercase tracking-[0.2em] hover:bg-muted"
+          >
+            Bekor
+          </button>
+          <button
+            onClick={() => {
+              if (!d.name.trim()) {
+                toast.error("Taom nomini kiriting");
+                return;
+              }
+              onSave(d);
+            }}
+            className="px-5 py-2.5 bg-primary text-cream text-xs uppercase tracking-[0.2em] hover:bg-ember flex items-center gap-2"
+          >
+            <Save className="h-3.5 w-3.5" /> Saqlash
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────── BRANCHES ADMIN ─────────────────────── */
 function BranchesAdmin() {
+  const list = useBranches();
+  const [editing, setEditing] = useState<Branch | null>(null);
+
+  const add = () => {
+    const b: Branch = {
+      id: "branch-" + Date.now(),
+      name: "Yangi filial",
+      city: "Toshkent",
+      address: "Manzil...",
+      phone: "+998 71 000 00 00",
+      coords: [41.3, 69.28],
+      image: "",
+    };
+    saveBranches([...list, b]);
+    setEditing(b);
+  };
+
+  const del = (id: string) => {
+    if (!confirm("Filialni o'chirishni tasdiqlaysizmi?")) return;
+    saveBranches(list.filter((b) => b.id !== id));
+    toast.success("O'chirildi");
+  };
+
+  const saveEdit = (b: Branch) => {
+    const exists = list.some((x) => x.id === b.id);
+    saveBranches(exists ? list.map((x) => (x.id === b.id ? b : x)) : [...list, b]);
+    toast.success("Saqlandi");
+    setEditing(null);
+  };
+
   return (
     <>
-      <PageHeader title="Filiallar" />
-      <div className="p-8 grid md:grid-cols-2 gap-5">
-        {branches.map((b) => (
-          <div key={b.id} className="border border-border bg-card overflow-hidden">
-            <img src={b.image} alt={b.name} className="h-40 w-full object-cover" />
-            <div className="p-5">
+      <PageHeader
+        title="Filiallar"
+        sub={`${list.length} ta filial`}
+        action={
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (confirm("Filiallarni boshlang'ich holatiga qaytarasizmi?")) {
+                  resetBranches();
+                  toast.success("Filiallar qayta tiklandi");
+                }
+              }}
+              className="px-4 py-2.5 border border-border text-cream text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-muted"
+            >
+              <RotateCcw className="h-3.5 w-3.5" /> Qayta tiklash
+            </button>
+            <button
+              onClick={add}
+              className="px-5 py-2.5 bg-primary text-cream text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-ember"
+            >
+              <Plus className="h-4 w-4" /> Yangi filial
+            </button>
+          </div>
+        }
+      />
+      <div className="p-6 md:p-8 grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+        {list.map((b) => (
+          <div key={b.id} className="border border-border bg-card overflow-hidden flex flex-col">
+            <div className="h-40 bg-[hsl(0_0%_10%)] relative overflow-hidden">
+              {b.image ? (
+                <img src={b.image} alt={b.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full grid place-items-center text-gold/30 text-5xl">❦</div>
+              )}
+            </div>
+            <div className="p-5 flex-1 flex flex-col">
               <h3 className="font-display text-xl text-cream">{b.name}</h3>
-              <div className="text-sm text-cream/60 mt-2">{b.address}</div>
-              <div className="text-sm text-gold mt-1">{b.phone}</div>
+              <div className="text-xs text-gold tracking-[0.25em] uppercase mt-1">{b.city}</div>
+              <div className="text-sm text-cream/70 mt-3">{b.address}</div>
+              <div className="text-sm text-cream/70 mt-1">{b.phone}</div>
+              <div className="text-xs text-cream/40 mt-1">
+                {b.coords[0].toFixed(4)}, {b.coords[1].toFixed(4)}
+              </div>
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => setEditing(b)}
+                  className="flex-1 py-2 text-xs uppercase tracking-[0.2em] bg-primary/15 text-primary hover:bg-primary hover:text-cream transition-all"
+                >
+                  Tahrirlash
+                </button>
+                <button
+                  onClick={() => del(b.id)}
+                  className="h-9 w-9 grid place-items-center border border-border text-cream/70 hover:text-destructive hover:border-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
+        {list.length === 0 && (
+          <div className="col-span-full text-center text-cream/50 py-16 border border-dashed border-border">
+            Filiallar mavjud emas
+          </div>
+        )}
       </div>
+
+      {editing && <BranchEditor branch={editing} onClose={() => setEditing(null)} onSave={saveEdit} />}
     </>
   );
 }
 
+function BranchEditor({
+  branch,
+  onClose,
+  onSave,
+}: {
+  branch: Branch;
+  onClose: () => void;
+  onSave: (b: Branch) => void;
+}) {
+  const [b, setB] = useState<Branch>(branch);
+  const set = <K extends keyof Branch>(k: K, v: Branch[K]) => setB((p) => ({ ...p, [k]: v }));
+
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 grid place-items-center p-4 overflow-y-auto">
+      <div className="bg-card border border-border w-full max-w-2xl my-8">
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <div>
+            <div className="text-gold text-[10px] tracking-[0.4em]">— FILIAL TAHRIRI</div>
+            <h2 className="font-display text-xl text-cream mt-1">{b.name || "Yangi filial"}</h2>
+          </div>
+          <button onClick={onClose} className="h-9 w-9 grid place-items-center hover:bg-muted rounded">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+          <ImageField value={b.image} onChange={(v) => set("image", v)} aspect="aspect-video" />
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+                Filial nomi
+              </label>
+              <input
+                value={b.name}
+                onChange={(e) => set("name", e.target.value)}
+                className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+                Shahar
+              </label>
+              <input
+                value={b.city}
+                onChange={(e) => set("city", e.target.value)}
+                className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+              Manzil
+            </label>
+            <input
+              value={b.address}
+              onChange={(e) => set("address", e.target.value)}
+              className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-1">
+              <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+                Telefon
+              </label>
+              <input
+                value={b.phone}
+                onChange={(e) => set("phone", e.target.value)}
+                className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+                Kenglik (lat)
+              </label>
+              <input
+                type="number"
+                step="0.0001"
+                value={b.coords[0]}
+                onChange={(e) => set("coords", [Number(e.target.value), b.coords[1]])}
+                className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+                Uzunlik (lon)
+              </label>
+              <input
+                type="number"
+                step="0.0001"
+                value={b.coords[1]}
+                onChange={(e) => set("coords", [b.coords[0], Number(e.target.value)])}
+                className="w-full bg-input border border-border text-cream px-4 py-3 focus:outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+        </div>
+        <div className="p-5 border-t border-border flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 border border-border text-cream/80 text-xs uppercase tracking-[0.2em] hover:bg-muted"
+          >
+            Bekor
+          </button>
+          <button
+            onClick={() => {
+              if (!b.name.trim()) {
+                toast.error("Filial nomini kiriting");
+                return;
+              }
+              onSave(b);
+            }}
+            className="px-5 py-2.5 bg-primary text-cream text-xs uppercase tracking-[0.2em] hover:bg-ember flex items-center gap-2"
+          >
+            <Save className="h-3.5 w-3.5" /> Saqlash
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────── STATS ─────────────────────── */
 function Stats() {
-  const data = Array.from({ length: 12 }, (_, i) => ({ m: ["Yan", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"][i], v: Math.floor(Math.random() * 200) + 100 }));
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const branches = useBranches();
+
+  useEffect(() => setReservations(getReservations()), []);
+
+  // Group by month over the past 12 months
+  const now = new Date();
+  const monthly = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const count = reservations.filter((r) => r.date.startsWith(key)).length;
+    return { m: ["Yan", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"][d.getMonth()], v: count };
+  });
+
+  const byBranch = branches.map((b) => ({
+    name: b.name.replace(" filiali", ""),
+    v: reservations.filter((r) => r.branchId === b.id && r.status !== "bekor").length,
+  }));
+
+  const byStatus = {
+    yangi: reservations.filter((r) => r.status === "yangi").length,
+    tasdiqlangan: reservations.filter((r) => r.status === "tasdiqlangan").length,
+    bekor: reservations.filter((r) => r.status === "bekor").length,
+  };
+
   return (
     <>
       <PageHeader title="Statistika" sub="Yillik ko'rsatkichlar" />
-      <div className="p-8">
+      <div className="p-6 md:p-8 space-y-6">
+        <div className="grid sm:grid-cols-3 gap-4">
+          <Stat label="Yangi" value={String(byStatus.yangi)} />
+          <Stat label="Tasdiqlangan" value={String(byStatus.tasdiqlangan)} accent />
+          <Stat label="Bekor qilingan" value={String(byStatus.bekor)} />
+        </div>
+
         <div className="border border-border bg-card p-6">
-          <div className="h-96">
+          <h3 className="font-display text-xl text-cream mb-1">Oylik bronlar</h3>
+          <p className="text-xs text-cream/50 mb-4">Oxirgi 12 oy</p>
+          <div className="h-72">
             <ResponsiveContainer>
-              <LineChart data={data}>
+              <LineChart data={monthly}>
                 <CartesianGrid stroke="hsl(0 0% 15%)" vertical={false} />
                 <XAxis dataKey="m" stroke="hsl(0 0% 50%)" fontSize={12} />
-                <YAxis stroke="hsl(0 0% 50%)" fontSize={12} />
+                <YAxis stroke="hsl(0 0% 50%)" fontSize={12} allowDecimals={false} />
                 <Tooltip contentStyle={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 20%)" }} />
-                <Line type="monotone" dataKey="v" stroke="hsl(var(--primary))" strokeWidth={2} />
+                <Line type="monotone" dataKey="v" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))", r: 3 }} />
               </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="border border-border bg-card p-6">
+          <h3 className="font-display text-xl text-cream mb-1">Filiallar bo'yicha</h3>
+          <p className="text-xs text-cream/50 mb-4">Faol bronlar</p>
+          <div className="h-64">
+            <ResponsiveContainer>
+              <BarChart data={byBranch}>
+                <CartesianGrid stroke="hsl(0 0% 15%)" vertical={false} />
+                <XAxis dataKey="name" stroke="hsl(0 0% 50%)" fontSize={11} />
+                <YAxis stroke="hsl(0 0% 50%)" fontSize={12} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 20%)" }} />
+                <Bar dataKey="v" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -445,20 +1382,226 @@ function Stats() {
   );
 }
 
-function Sett() {
+/* ─────────────────────── SETTINGS ─────────────────────── */
+function SettingsPage() {
+  const initial = useSettings();
+  const [s, setS] = useState<SiteSettings>(initial);
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    setS(initial);
+    setDirty(false);
+  }, [initial]);
+
+  const set = <K extends keyof SiteSettings>(k: K, v: SiteSettings[K]) => {
+    setS((p) => ({ ...p, [k]: v }));
+    setDirty(true);
+  };
+
+  const save = () => {
+    saveSettings(s);
+    toast.success("Sozlamalar saqlandi");
+    setDirty(false);
+  };
+
+  const exportData = () => {
+    const data = {
+      settings: getSettings(),
+      dishes: getDishes(),
+      branches: getBranches(),
+      reservations: getReservations(),
+      exportedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kuddus-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Ma'lumotlar yuklab olindi");
+  };
+
+  const importData = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(String(reader.result));
+        if (data.settings) saveSettings(data.settings);
+        if (Array.isArray(data.dishes)) saveDishes(data.dishes);
+        if (Array.isArray(data.branches)) saveBranches(data.branches);
+        toast.success("Ma'lumotlar yuklandi");
+      } catch {
+        toast.error("Faylni o'qib bo'lmadi");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <>
-      <PageHeader title="Sozlamalar" />
-      <div className="p-8 max-w-2xl space-y-4">
-        <div className="border border-border bg-card p-6">
-          <h3 className="font-display text-xl text-cream">Restoran nomi</h3>
-          <input defaultValue="Kuddus Steak" className="w-full mt-3 bg-input border border-border text-cream px-3 py-2" />
-        </div>
-        <div className="border border-border bg-card p-6">
-          <h3 className="font-display text-xl text-cream">Ish vaqti</h3>
-          <input defaultValue="11:00 — 00:00" className="w-full mt-3 bg-input border border-border text-cream px-3 py-2" />
-        </div>
+      <PageHeader
+        title="Sozlamalar"
+        sub="Restoran va saytning asosiy ma'lumotlari"
+        action={
+          <button
+            onClick={save}
+            disabled={!dirty}
+            className={cn(
+              "px-5 py-2.5 text-xs uppercase tracking-[0.2em] flex items-center gap-2 transition-all",
+              dirty ? "bg-primary text-cream hover:bg-ember" : "bg-muted text-cream/40 cursor-not-allowed"
+            )}
+          >
+            <Save className="h-3.5 w-3.5" /> Saqlash
+          </button>
+        }
+      />
+      <div className="p-6 md:p-8 max-w-4xl space-y-6">
+        <Section title="Asosiy ma'lumotlar">
+          <Grid>
+            <Field label="Restoran nomi">
+              <input
+                value={s.name}
+                onChange={(e) => set("name", e.target.value)}
+                className="input"
+              />
+            </Field>
+            <Field label="Slogan">
+              <input
+                value={s.tagline}
+                onChange={(e) => set("tagline", e.target.value)}
+                className="input"
+              />
+            </Field>
+          </Grid>
+        </Section>
+
+        <Section title="Aloqa">
+          <Grid>
+            <Field label="Telefon">
+              <input value={s.phone} onChange={(e) => set("phone", e.target.value)} className="input" />
+            </Field>
+            <Field label="Email">
+              <input value={s.email} onChange={(e) => set("email", e.target.value)} className="input" />
+            </Field>
+            <Field label="Manzil">
+              <input value={s.address} onChange={(e) => set("address", e.target.value)} className="input" />
+            </Field>
+            <Field label="Ish vaqti">
+              <input value={s.hours} onChange={(e) => set("hours", e.target.value)} className="input" />
+            </Field>
+          </Grid>
+        </Section>
+
+        <Section title="Ijtimoiy tarmoqlar">
+          <Grid>
+            <Field label="Instagram URL">
+              <input
+                value={s.instagram}
+                onChange={(e) => set("instagram", e.target.value)}
+                className="input"
+              />
+            </Field>
+            <Field label="Telegram URL">
+              <input
+                value={s.telegram}
+                onChange={(e) => set("telegram", e.target.value)}
+                className="input"
+              />
+            </Field>
+          </Grid>
+        </Section>
+
+        <Section title="Bosh sahifa banneri">
+          <Grid>
+            <Field label="Sarlavha">
+              <input
+                value={s.heroTitle}
+                onChange={(e) => set("heroTitle", e.target.value)}
+                className="input"
+              />
+            </Field>
+            <Field label="Tavsif">
+              <textarea
+                value={s.heroSubtitle}
+                onChange={(e) => set("heroSubtitle", e.target.value)}
+                rows={2}
+                className="input resize-none"
+              />
+            </Field>
+          </Grid>
+          <div className="mt-4">
+            <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+              Fon rasmi (video fallback)
+            </label>
+            <ImageField value={s.heroPoster} onChange={(v) => set("heroPoster", v)} aspect="aspect-video" />
+          </div>
+        </Section>
+
+        <Section title="Ma'lumotlarni zahiralash">
+          <p className="text-sm text-cream/60 mb-4">
+            Menyu, filiallar, sozlamalar va bronlarni JSON faylga yuklab oling yoki qayta yuklang.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={exportData}
+              className="px-5 py-2.5 border border-border text-cream text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:border-primary hover:text-primary"
+            >
+              <Download className="h-3.5 w-3.5" /> Yuklab olish
+            </button>
+            <label className="px-5 py-2.5 border border-border text-cream text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:border-primary hover:text-primary cursor-pointer">
+              <Upload className="h-3.5 w-3.5" /> Yuklash
+              <input
+                type="file"
+                accept="application/json"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) importData(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </div>
+        </Section>
       </div>
+
+      <style>{`
+        .input {
+          width: 100%;
+          background: hsl(var(--input));
+          border: 1px solid hsl(var(--border));
+          color: hsl(var(--cream));
+          padding: 0.75rem 1rem;
+          font-size: 0.95rem;
+          transition: border-color 0.2s;
+        }
+        .input:focus { outline: none; border-color: hsl(var(--primary)); }
+      `}</style>
     </>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="border border-border bg-card p-6">
+      <h3 className="font-display text-xl text-cream mb-5">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function Grid({ children }: { children: React.ReactNode }) {
+  return <div className="grid sm:grid-cols-2 gap-4">{children}</div>;
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-[10px] uppercase tracking-[0.25em] text-cream/60 mb-2 block">
+        {label}
+      </label>
+      {children}
+    </div>
   );
 }
