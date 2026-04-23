@@ -40,13 +40,13 @@
 
     --border: 42 25% 18%;
     --input: 0 0% 10%;
-    --ring: 42 60% 60%;
+    --ring: 38 52% 50%;
 
     --radius: 0.125rem;
 
     /* Gradients */
     --gradient-hero: linear-gradient(180deg, hsl(0 0% 0% / 0.35) 0%, hsl(0 0% 0% / 0.92) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(38 55% 50%) 0%, hsl(42 70% 78%) 50%, hsl(38 55% 48%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(35 60% 35%) 0%, hsl(40 65% 65%) 50%, hsl(35 60% 35%) 100%);
     --gradient-royal: linear-gradient(135deg, hsl(333 75% 35%), hsl(333 70% 50%));
     --gradient-dark: linear-gradient(180deg, hsl(0 0% 4%), hsl(0 0% 8%));
 
@@ -58,12 +58,12 @@
     /* Sidebar (admin) */
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 42 38% 90%;
-    --sidebar-primary: 42 60% 70%;
+    --sidebar-primary: 38 52% 55%;
     --sidebar-primary-foreground: 0 0% 4%;
     --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 42 38% 90%;
-    --sidebar-border: 42 20% 14%;
-    --sidebar-ring: 42 60% 60%;
+    --sidebar-border: 38 25% 14%;
+    --sidebar-ring: 38 52% 50%;
   }
 }
 
