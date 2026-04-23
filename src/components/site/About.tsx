@@ -55,25 +55,18 @@ export default function About() {
           className="relative"
         >
           <div className="relative aspect-[4/5] overflow-hidden royal-frame group">
-            {/* Optional video — falls back to image. Owner can replace /restoran-video.mp4 */}
+            {/* Owner can drop /public/restoran-video.mp4 to replace this. Poster shows until video loads / if missing. */}
             <video
               className="absolute inset-0 h-full w-full object-cover"
               autoPlay
               muted
               loop
               playsInline
-              poster="https://images.unsplash.com/photo-1631292784640-2b24be784d5d?auto=format&fit=crop&w=1200&q=80"
+              poster="https://images.unsplash.com/photo-1631292784640-2b24be784d5d?auto=format&fit=crop&w=1600&q=80"
             >
               <source src="/restoran-video.mp4" type="video/mp4" />
             </video>
-            <img
-              src="https://images.unsplash.com/photo-1631292784640-2b24be784d5d?auto=format&fit=crop&w=1200&q=80"
-              alt="An'anaviy o'zbek dasturxoni"
-              className="h-full w-full object-cover"
-              loading="lazy"
-              aria-hidden
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent pointer-events-none" />
           </div>
         </motion.div>
 
