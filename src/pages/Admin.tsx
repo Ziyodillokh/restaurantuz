@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Routes, Route, Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import {
-  Flame,
+  Crown,
   Home,
   Calendar,
   Utensils,
@@ -74,7 +74,7 @@ const AUTH_KEY = "zr.v2.admin.auth";
 function useAuth() {
   const [authed, setAuthed] = useState<boolean>(() => sessionStorage.getItem(AUTH_KEY) === "1");
   const login = (u: string, p: string) => {
-    if (u === "admin" && p === "ziyodullo2024") {
+    if (u === "admin" && p === "imron2024") {
       sessionStorage.setItem(AUTH_KEY, "1");
       setAuthed(true);
       return true;
@@ -118,13 +118,11 @@ function Login({ onLogin }: { onLogin: (u: string, p: string) => boolean }) {
         onSubmit={submit}
         className="relative glass-dark p-10 w-full max-w-md"
       >
-        <Link to="/" className="flex items-center gap-2 mb-8">
-          <Flame className="h-7 w-7 text-primary" />
+        <Link to="/" className="flex items-center gap-3 mb-8">
+          <Crown className="h-7 w-7 text-accent" />
           <div>
-            <div className="font-display text-2xl text-cream">
-              ZIYODULLO<span className="text-primary"> RESTAURANT</span>
-            </div>
-            <div className="text-[10px] tracking-[0.3em] text-gold">ADMIN PANEL</div>
+            <div className="font-display text-2xl gold-foil">IMRON</div>
+            <div className="text-[10px] tracking-[0.3em] text-accent/80">ADMIN PANEL</div>
           </div>
         </Link>
         <div className="space-y-5">
@@ -159,7 +157,7 @@ function Login({ onLogin }: { onLogin: (u: string, p: string) => boolean }) {
           <button className="w-full py-4 bg-primary text-cream uppercase tracking-[0.3em] text-xs hover:bg-ember hover:shadow-ember transition-all flex items-center justify-center gap-2">
             <Lock className="h-4 w-4" /> Kirish
           </button>
-          <p className="text-xs text-cream/40 text-center">Demo: admin / ziyodullo2024</p>
+          <p className="text-xs text-cream/40 text-center">Demo: admin / imron2024</p>
         </div>
       </motion.form>
     </div>
@@ -193,13 +191,11 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        <Link to="/" className="flex items-center gap-2 p-6 border-b border-sidebar-border">
-          <Flame className="h-6 w-6 text-primary" />
+        <Link to="/" className="flex items-center gap-3 p-6 border-b border-sidebar-border">
+          <Crown className="h-6 w-6 text-accent" />
           <div className="leading-tight">
-            <div className="font-display text-lg text-cream">
-              ZIYODULLO<span className="text-primary"> RESTAURANT</span>
-            </div>
-            <div className="text-[9px] tracking-[0.3em] text-gold">ADMIN</div>
+            <div className="font-display text-xl gold-foil">IMRON</div>
+            <div className="text-[9px] tracking-[0.3em] text-accent/80">RESTORAN · ADMIN</div>
           </div>
         </Link>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
@@ -251,9 +247,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           >
             <ListOrdered className="h-4 w-4" />
           </button>
-          <div className="font-display text-sm text-cream">
-            KUDDUS<span className="text-primary"> STEAK</span>
-          </div>
+          <div className="font-display text-base gold-foil">IMRON · ADMIN</div>
         </div>
 
         <Routes>
@@ -1244,7 +1238,7 @@ function MenuAdmin() {
       name: "Yangi taom",
       price: 100000,
       desc: "Ta'rifni kiriting...",
-      category: "premium",
+      category: "palov",
       image: "",
       weight: "",
     };
@@ -1971,7 +1965,7 @@ function SettingsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `kuddus-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `imron-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("Ma'lumotlar yuklab olindi");

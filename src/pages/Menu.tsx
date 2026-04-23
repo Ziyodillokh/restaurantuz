@@ -1,465 +1,440 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import HTMLFlipBook from "react-pageflip";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, BookOpen, List } from "lucide-react";
+import { Link } from "react-router-dom";
+import { X, ChevronLeft, ChevronRight, Search, Crown } from "lucide-react";
 import Layout from "@/components/site/Layout";
-import BookPage, { HardPage } from "@/components/menu/BookPage";
-import DishItem from "@/components/menu/DishItem";
+import { useDishes, useSettings } from "@/lib/store";
+import { formatSom, type Dish } from "@/data/menu";
 import {
-  buildPages,
   categoryLabels,
   categoryOrder,
   categorySubtitle,
   type CategoryKey,
 } from "@/components/menu/pages";
-import { useDishes, useSettings } from "@/lib/store";
-import type { Dish } from "@/data/menu";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
-/* ────────────────────── DESKTOP BOOK ────────────────────── */
-function DesktopBook({ dishes }: { dishes: Dish[] }) {
-  const pages = useMemo(() => buildPages(dishes), [dishes]);
-  const bookRef = useRef<any>(null);
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState({ w: 520, h: 720 });
-  const [showToc, setShowToc] = useState(false);
+const FALLBACK =
+  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80";
 
-  useEffect(() => {
-    const compute = () => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      // Reserve space for header, TOC button, page counter & gutters.
-      const availW = Math.min(vw - 220, 1200); // leave room for side arrows + padding
-      const availH = vh - 260;
+const badgeStyles: Record<NonNullable<Dish["badge"]>, { label: string; cls: string }> = {
+  signature: { label: "Signature", cls: "bg-primary/90 text-primary-foreground" },
+  chef: { label: "Chef's Pick", cls: "bg-accent/95 text-accent-foreground" },
+  new: { label: "Yangi", cls: "bg-cream/95 text-background" },
+  spicy: { label: "Achchiq", cls: "bg-ruby/90 text-cream" },
+};
 
-      // Keep a portrait page aspect ratio of ~1:1.38 — target height, then derive width.
-      let h = Math.min(availH, 800);
-      let w = h / 1.38;
-      // Two-page spread must fit horizontally
-      if (w * 2 > availW) {
-        w = availW / 2;
-        h = w * 1.38;
-      }
-      w = Math.max(Math.min(w, 540), 360);
-      h = Math.max(Math.min(h, 800), 520);
-      setSize({ w, h });
-    };
-    compute();
-    window.addEventListener("resize", compute);
-    return () => window.removeEventListener("resize", compute);
-  }, []);
+/* ──────────────── Image with graceful fallback ──────────────── */
+function FoodImg({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  return (
+    <img
+      src={src || FALLBACK}
+      alt={alt}
+      loading="lazy"
+      className={className}
+      onError={(e) => {
+        const img = e.currentTarget as HTMLImageElement;
+        if (img.dataset.fb !== "1") {
+          img.dataset.fb = "1";
+          img.src = FALLBACK;
+        }
+      }}
+    />
+  );
+}
+
+/* ──────────────── Editorial mosaic card ──────────────── */
+function DishCard({
+  dish,
+  onOpen,
+  size = "regular",
+}: {
+  dish: Dish;
+  onOpen: () => void;
+  size?: "regular" | "tall" | "wide";
+}) {
+  const aspect =
+    size === "tall" ? "aspect-[4/5] md:aspect-[3/4]" : size === "wide" ? "aspect-[16/10]" : "aspect-[4/5]";
+  return (
+    <motion.button
+      type="button"
+      onClick={onOpen}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.6 }}
+      className={cn(
+        "group relative overflow-hidden bg-card text-left w-full",
+        "border border-border/60 hover:border-accent/60 transition-all duration-500"
+      )}
+    >
+      <div className={cn("relative overflow-hidden", aspect)}>
+        <FoodImg
+          src={dish.image}
+          alt={dish.name}
+          className="h-full w-full object-cover transition-transform duration-[1.6s] ease-out group-hover:scale-110"
+        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+        {/* Badge */}
+        {dish.badge && (
+          <span
+            className={cn(
+              "absolute top-4 left-4 px-2.5 py-1 text-[9px] tracking-[0.25em] uppercase",
+              badgeStyles[dish.badge].cls
+            )}
+          >
+            {badgeStyles[dish.badge].label}
+          </span>
+        )}
+        {/* Top-right gold dot — hover hint */}
+        <span className="absolute top-4 right-4 h-2 w-2 rounded-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+
+      {/* Caption */}
+      <div className="absolute inset-x-0 bottom-0 p-5 md:p-6">
+        <div className="text-[10px] tracking-[0.35em] text-accent uppercase mb-1.5">
+          {categoryLabels[dish.category as CategoryKey]}
+          {dish.weight ? ` · ${dish.weight}` : ""}
+        </div>
+        <h3 className="font-display text-2xl md:text-[26px] text-cream leading-tight">
+          {dish.name}
+        </h3>
+        <div className="mt-3 flex items-end justify-between gap-3">
+          <p className="font-serif-alt italic text-cream/70 text-sm line-clamp-2 max-w-[80%]">
+            {dish.desc}
+          </p>
+          <div className="font-accent text-cream text-lg whitespace-nowrap">
+            {formatSom(dish.price)}
+          </div>
+        </div>
+      </div>
+    </motion.button>
+  );
+}
+
+/* ──────────────── Lightbox ──────────────── */
+function Lightbox({
+  dishes,
+  index,
+  onClose,
+  onIndex,
+}: {
+  dishes: Dish[];
+  index: number;
+  onClose: () => void;
+  onIndex: (i: number) => void;
+}) {
+  const dish = dishes[index];
+
+  const next = useCallback(
+    () => onIndex((index + 1) % dishes.length),
+    [index, dishes.length, onIndex]
+  );
+  const prev = useCallback(
+    () => onIndex((index - 1 + dishes.length) % dishes.length),
+    [index, dishes.length, onIndex]
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") bookRef.current?.pageFlip()?.flipNext();
-      if (e.key === "ArrowLeft") bookRef.current?.pageFlip()?.flipPrev();
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [next, prev, onClose]);
 
-  const goToCategory = (cat: CategoryKey) => {
-    const idx = pages.findIndex((p) => p.kind === "section-cover" && p.category === cat);
-    if (idx >= 0) bookRef.current?.pageFlip()?.flip(idx);
-    setShowToc(false);
-  };
-
-  const availableCats = useMemo(
-    () =>
-      categoryOrder.filter((c) =>
-        pages.some((p) => p.kind === "section-cover" && p.category === c)
-      ),
-    [pages]
-  );
+  if (!dish) return null;
 
   return (
-    <div className="relative">
-      {/* TOC button */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] bg-background/96 backdrop-blur-md"
+    >
+      {/* Close */}
       <button
-        onClick={() => setShowToc((v) => !v)}
-        className="absolute -top-14 right-0 inline-flex items-center gap-2 text-cream/70 hover:text-primary transition-colors text-xs tracking-[0.3em] z-30"
+        onClick={onClose}
+        className="absolute top-4 right-4 md:top-6 md:right-6 z-10 h-11 w-11 grid place-items-center text-cream/80 hover:text-accent border border-cream/20 hover:border-accent rounded-full transition-colors"
+        aria-label="Yopish"
       >
-        <List className="h-4 w-4" /> KATEGORIYALAR
+        <X className="h-5 w-5" />
       </button>
 
-      <AnimatePresence>
-        {showToc && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute -top-2 right-0 z-30 glass-dark rounded-md p-3 min-w-[240px] border border-accent/20"
-          >
-            <div className="text-[10px] tracking-[0.3em] text-accent mb-2 px-2">
-              — MUNDARIJA —
-            </div>
-            {availableCats.map((c) => (
-              <button
-                key={c}
-                onClick={() => goToCategory(c)}
-                className="w-full text-left px-3 py-2 text-cream/80 hover:text-primary hover:bg-white/5 rounded text-sm font-display"
-              >
-                {categoryLabels[c]}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Counter */}
+      <div className="absolute top-6 left-6 z-10 text-cream/60 text-[11px] tracking-[0.4em]">
+        {String(index + 1).padStart(2, "0")} / {String(dishes.length).padStart(2, "0")}
+      </div>
 
-      <div className="flex justify-center items-center">
-        <button
-          onClick={() => bookRef.current?.pageFlip()?.flipPrev()}
-          className="hidden lg:grid place-items-center h-12 w-12 mr-6 rounded-full border border-cream/30 text-cream hover:border-primary hover:text-primary transition-all hover:scale-110 shrink-0"
-          aria-label="Oldingi"
+      {/* Prev / Next */}
+      <button
+        onClick={prev}
+        aria-label="Oldingi"
+        className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-10 h-11 w-11 md:h-14 md:w-14 grid place-items-center text-cream/70 hover:text-accent border border-cream/15 hover:border-accent rounded-full transition-colors"
+      >
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <button
+        onClick={next}
+        aria-label="Keyingi"
+        className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-10 h-11 w-11 md:h-14 md:w-14 grid place-items-center text-cream/70 hover:text-accent border border-cream/15 hover:border-accent rounded-full transition-colors"
+      >
+        <ChevronRight className="h-5 w-5" />
+      </button>
+
+      {/* Content */}
+      <div className="h-full w-full grid lg:grid-cols-[1.2fr_1fr]">
+        <motion.div
+          key={dish.id + "-img"}
+          initial={{ opacity: 0, scale: 1.02 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative h-[55vh] lg:h-full min-h-[300px]"
         >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-
-        {/* Book stack illusion behind */}
-        <div className="relative">
-          <div
-            className="absolute inset-0 -z-10 rounded-sm"
-            style={{
-              background: "hsl(20 40% 8%)",
-              transform: "translate(8px, 8px)",
-              filter: "blur(2px)",
-              opacity: 0.6,
-            }}
+          <FoodImg
+            src={dish.image}
+            alt={dish.name}
+            className="h-full w-full object-cover"
           />
-          <div className="shadow-deep">
-            {/* @ts-ignore */}
-            <HTMLFlipBook
-              ref={bookRef}
-              width={size.w}
-              height={size.h}
-              size="fixed"
-              minWidth={360}
-              maxWidth={600}
-              minHeight={520}
-              maxHeight={900}
-              drawShadow
-              flippingTime={900}
-              showCover={true}
-              mobileScrollSupport={false}
-              onFlip={(e: any) => setPage(e.data)}
-              className=""
-              style={{}}
-              startPage={0}
-              usePortrait={false}
-              startZIndex={0}
-              autoSize={false}
-              maxShadowOpacity={0.7}
-              clickEventForward
-              useMouseEvents
-              swipeDistance={30}
-              showPageCorners
-              disableFlipByClick={false}
-            >
-              {pages.map((p, idx) => renderPage(p, idx))}
-            </HTMLFlipBook>
-          </div>
-        </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/30 lg:bg-gradient-to-r" />
+        </motion.div>
 
-        <button
-          onClick={() => bookRef.current?.pageFlip()?.flipNext()}
-          className="hidden lg:grid place-items-center h-12 w-12 ml-6 rounded-full border border-cream/30 text-cream hover:border-primary hover:text-primary transition-all hover:scale-110 shrink-0"
-          aria-label="Keyingi"
+        <motion.div
+          key={dish.id + "-info"}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex flex-col justify-center p-8 md:p-12 lg:p-16 max-w-2xl"
         >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
-
-      {/* Page progress */}
-      <div className="text-center mt-8">
-        <div className="inline-flex items-center gap-3 text-cream/60 text-[11px] tracking-[0.4em]">
-          <span>{String(page + 1).padStart(2, "0")}</span>
-          <span className="block w-32 h-px bg-cream/20 relative">
-            <span
-              className="absolute left-0 top-0 h-px bg-primary transition-all duration-500"
-              style={{ width: `${((page + 1) / pages.length) * 100}%` }}
-            />
-          </span>
-          <span>{String(pages.length).padStart(2, "0")}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ────────────── Page renderer (shared) ────────────── */
-function renderPage(p: ReturnType<typeof buildPages>[number], idx: number) {
-  const side: "left" | "right" = idx % 2 === 0 ? "right" : "left";
-
-  if (p.kind === "cover") {
-    return (
-      <HardPage key={idx}>
-        <div className="text-center leather-frame p-10 md:p-12 relative">
-          <div className="absolute top-2 left-2 right-2 bottom-2 border border-[hsl(38_55%_55%)]/40 pointer-events-none" />
-          <div className="text-[10px] tracking-[0.6em] gold-foil">EST · 2014</div>
-          <div className="font-display text-4xl md:text-5xl mt-6 gold-foil">ZIYODULLO</div>
-          <div className="font-display text-4xl md:text-5xl gold-foil">RESTAURANT</div>
-          <div className="my-6 h-px w-24 bg-[hsl(38_55%_55%)] mx-auto" />
-          <div className="font-accent text-2xl tracking-[0.4em] gold-foil">— MENYU —</div>
-          <div className="mt-8 text-[9px] tracking-[0.5em] text-[hsl(38_45%_60%)]">
-            HANDCRAFTED · OPEN FIRE
+          <div className="text-[10px] tracking-[0.5em] text-accent uppercase">
+            {categoryLabels[dish.category as CategoryKey]}
           </div>
-        </div>
-      </HardPage>
-    );
-  }
-
-  if (p.kind === "back") {
-    return (
-      <HardPage key={idx}>
-        <div className="text-center">
-          <div className="font-display text-3xl gold-foil">Tashrifingiz uchun</div>
-          <div className="font-display italic text-4xl mt-1 gold-foil">rahmat.</div>
-          <div className="my-6 h-px w-20 bg-[hsl(38_55%_55%)] mx-auto" />
-          <div className="font-accent text-sm tracking-[0.5em] gold-foil">
-            +998 71 200 14 14
-          </div>
-          <div className="mt-6 text-[9px] tracking-[0.5em] text-[hsl(38_45%_60%)]">
-            ZIYODULLO-RESTAURANT.UZ
-          </div>
-        </div>
-      </HardPage>
-    );
-  }
-
-  if (p.kind === "intro") {
-    return (
-      <BookPage key={idx} side={side} variant="aged">
-        <div className="h-full flex flex-col justify-center text-center">
-          <div className="font-accent text-xs tracking-[0.5em] text-[hsl(351_70%_35%)]">
-            XUSH KELIBSIZ
-          </div>
-          <h2 className="font-display text-3xl md:text-4xl mt-4 text-[hsl(20_40%_15%)]">
-            Ziyodullo Restaurant Menyusi
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-cream mt-3 leading-[1.05]">
+            {dish.name}
           </h2>
-          <div className="ornament ornament-aged my-6 mx-8" />
-          <p className="font-serif-alt italic text-base md:text-lg max-w-md mx-auto leading-relaxed text-[hsl(20_30%_25%)]">
-            "Har bir bo'lakda — 10 yillik mahorat, olov sadosi va Argentina,
-            AQSH, Avstraliyaning eng yaxshi marmar go'shtidan tajriba."
+          <div className="gold-divider my-6 w-20" />
+          <p className="font-serif-alt italic text-lg md:text-xl text-cream/80 leading-relaxed">
+            {dish.desc}
           </p>
-          <div className="mt-10 text-[10px] tracking-[0.4em] text-[hsl(20_30%_30%)]">
-            — OSHPAZ ZIYODULLO —
-          </div>
-        </div>
-      </BookPage>
-    );
-  }
 
-  if (p.kind === "section-cover") {
-    return (
-      <BookPage key={idx} side={side} variant="aged">
-        <div className="h-full flex flex-col justify-center items-center text-center">
-          <div className="text-[10px] tracking-[0.5em] text-[hsl(38_50%_38%)]">— BO'LIM —</div>
-          <h2 className="font-display text-4xl md:text-5xl mt-6 text-[hsl(20_40%_15%)] leading-tight">
-            {categoryLabels[p.category]}
-          </h2>
-          <div className="ornament ornament-aged my-6 w-3/4" />
-          <p className="font-serif-alt italic text-base text-[hsl(20_30%_30%)] max-w-xs">
-            {categorySubtitle[p.category]}
-          </p>
-        </div>
-      </BookPage>
-    );
-  }
-
-  // Content section
-  return (
-    <BookPage key={idx} side={side}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="font-accent text-[11px] tracking-[0.4em] text-[hsl(351_70%_35%)]">
-          {p.title}
-        </div>
-        <div className="text-[9px] tracking-[0.3em] text-[hsl(20_25%_40%)]">
-          {p.pageNum}/{p.totalPages}
-        </div>
-      </div>
-      <div className="ornament mb-3" />
-      <div className="flex-1 overflow-hidden">
-        {p.items.map((d) => (
-          <DishItem key={d.id} d={d} />
-        ))}
-      </div>
-      <div className="text-center text-[9px] tracking-[0.4em] text-[hsl(20_25%_40%)] mt-2">
-        — ZIYODULLO RESTAURANT —
-      </div>
-    </BookPage>
-  );
-}
-
-/* ────────────────────── MOBILE EXPERIENCE ────────────────────── */
-function MobileMenu({ dishes }: { dishes: Dish[] }) {
-  const grouped = useMemo(
-    () =>
-      categoryOrder
-        .map((c) => ({ key: c, items: dishes.filter((d) => d.category === c) }))
-        .filter((g) => g.items.length > 0),
-    [dishes]
-  );
-  const [active, setActive] = useState<CategoryKey>(grouped[0]?.key || "premium");
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  const scrollTo = (c: CategoryKey) => {
-    const el = sectionRefs.current[c];
-    if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - 110;
-      window.scrollTo({ top, behavior: "smooth" });
-    }
-  };
-
-  useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY + 140;
-      for (const g of grouped) {
-        const el = sectionRefs.current[g.key];
-        if (!el) continue;
-        if (el.offsetTop <= y && el.offsetTop + el.offsetHeight > y) {
-          setActive(g.key);
-          break;
-        }
-      }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [grouped]);
-
-  return (
-    <div>
-      {/* Decorative cover */}
-      <div className="texture-leather rounded-sm p-6 mb-6 leather-frame">
-        <div className="text-center">
-          <div className="text-[9px] tracking-[0.5em] gold-foil">EST · 2014</div>
-          <div className="font-display text-3xl mt-2 gold-foil">ZIYODULLO RESTAURANT</div>
-          <div className="my-3 h-px w-16 bg-[hsl(38_55%_55%)] mx-auto" />
-          <div className="font-accent tracking-[0.4em] gold-foil">— MENYU —</div>
-        </div>
-      </div>
-
-      {/* Sticky category tabs */}
-      <div className="sticky top-16 z-20 -mx-6 px-6 py-3 bg-background/95 backdrop-blur-md border-y border-cream/10">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {grouped.map((g) => (
-            <button
-              key={g.key}
-              onClick={() => scrollTo(g.key)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] tracking-[0.25em] uppercase transition-all ${
-                active === g.key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-white/5 text-cream/70 hover:text-cream"
-              }`}
-            >
-              {categoryLabels[g.key]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Sections rendered as paper "leaves" */}
-      <div className="space-y-6 mt-6">
-        {grouped.map((g) => (
-          <div
-            key={g.key}
-            ref={(el) => (sectionRefs.current[g.key] = el)}
-            className="texture-paper rounded-sm shadow-deep relative overflow-hidden"
-          >
-            <div
-              aria-hidden
-              className="absolute top-0 right-0 w-10 h-10 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(225deg, hsl(28 35% 75%) 0%, hsl(28 35% 75%) 50%, transparent 50%)",
-              }}
-            />
-            <div className="p-5 text-[hsl(20_30%_15%)]">
-              <div className="text-center">
-                <div className="text-[10px] tracking-[0.5em] text-[hsl(38_50%_38%)]">
-                  — BO'LIM —
+          <div className="mt-10 flex flex-wrap items-end justify-between gap-6">
+            <div>
+              {dish.weight && (
+                <div className="text-[10px] tracking-[0.35em] text-cream/50 uppercase">
+                  Hajm
                 </div>
-                <h2 className="font-display text-2xl mt-1 text-[hsl(20_40%_15%)]">
-                  {categoryLabels[g.key]}
-                </h2>
-                <p className="font-serif-alt italic text-xs text-[hsl(20_30%_30%)] mt-1">
-                  {categorySubtitle[g.key]}
-                </p>
-                <div className="ornament my-4" />
-              </div>
-              <div>
-                {g.items.map((d) => (
-                  <DishItem key={d.id} d={d} compact />
-                ))}
+              )}
+              <div className="font-display text-2xl text-cream mt-1">{dish.weight || ""}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] tracking-[0.35em] text-cream/50 uppercase">Narx</div>
+              <div className="font-accent text-4xl text-accent mt-1">
+                {formatSom(dish.price)}
               </div>
             </div>
           </div>
-        ))}
-      </div>
 
-      <div className="text-center mt-8 mb-4 text-cream/50 text-[10px] tracking-[0.4em]">
-        — TASHRIFINGIZ UCHUN RAHMAT —
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Link
+              to="/bron"
+              state={{ dish: dish.id }}
+              onClick={onClose}
+              className="px-7 py-4 bg-primary text-primary-foreground uppercase tracking-[0.3em] text-xs hover:bg-ruby hover:royal-glow transition-all"
+            >
+              Stol band qilib buyurtma
+            </Link>
+            <button
+              onClick={onClose}
+              className="px-7 py-4 border border-cream/30 text-cream uppercase tracking-[0.3em] text-xs hover:border-accent hover:text-accent transition-colors"
+            >
+              Menyuga qaytish
+            </button>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
-/* ────────────────────── PAGE WRAPPER ────────────────────── */
+/* ──────────────── Page ──────────────── */
 export default function MenuPage() {
-  const isMobile = useIsMobile();
   const dishes = useDishes();
   const settings = useSettings();
+  const [active, setActive] = useState<"all" | CategoryKey>("all");
+  const [query, setQuery] = useState("");
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const availableCats = useMemo(
+    () => categoryOrder.filter((c) => dishes.some((d) => d.category === c)),
+    [dishes]
+  );
+
+  const filtered = useMemo(() => {
+    return dishes.filter((d) => {
+      if (active !== "all" && d.category !== active) return false;
+      if (query) {
+        const q = query.toLowerCase();
+        if (!d.name.toLowerCase().includes(q) && !d.desc.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+  }, [dishes, active, query]);
+
+  // Mosaic sizing pattern: every 7th = wide, every 5th = tall
+  const sizeFor = (i: number): "regular" | "tall" | "wide" => {
+    if (i % 11 === 3) return "wide";
+    if (i % 7 === 0) return "tall";
+    return "regular";
+  };
 
   return (
     <Layout>
-      <section className="relative min-h-screen pt-28 pb-20 overflow-hidden">
-        {/* Atmospheric background */}
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1600&q=80"
-            alt=""
-            className="h-full w-full object-cover blur-md scale-110"
-          />
-          <div className="absolute inset-0 bg-background/90" />
-          <div
-            className="absolute inset-0 opacity-30"
-            style={{
-              background:
-                "radial-gradient(ellipse at top, hsl(351 86% 42% / 0.15), transparent 60%)",
-            }}
-          />
-        </div>
+      <section className="pt-28 pb-24 relative">
+        {/* Atmospheric backdrop */}
+        <div className="absolute inset-0 pointer-events-none pattern-royal opacity-90" />
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-[420px] pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at top, hsl(var(--primary) / 0.18), transparent 60%)",
+          }}
+        />
 
-        <div className="relative max-w-[1400px] mx-auto container-px">
-          <motion.div
+        <div className="relative max-w-[1500px] mx-auto container-px">
+          {/* Header */}
+          <motion.header
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="text-center mb-10"
+            className="text-center max-w-3xl mx-auto"
           >
-            <div className="inline-flex items-center gap-2 text-accent text-[11px] tracking-[0.5em] mb-3">
-              <BookOpen className="h-3.5 w-3.5" />
-              MENYU KITOBI
+            <div className="inline-flex items-center gap-2 text-accent text-[11px] tracking-[0.5em] uppercase">
+              <Crown className="h-3.5 w-3.5" />
+              {settings.name} · Menyu
             </div>
-            <h1 className="font-display text-4xl md:text-6xl text-cream">
-              {settings.name}{" "}
-              <span className="italic text-gradient-ember">qadr-qiymatlari</span>
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-cream mt-5 leading-[1.05]">
+              Milliy{" "}
+              <span className="italic text-gradient-gold">dasturxon</span>
             </h1>
-            <p className="mt-3 text-cream/55 text-sm">
-              {isMobile
-                ? "Pastga aylantiring · Tepadagi yorliqlardan tezkor o'ting"
-                : "Sahifani varaqlash uchun bosing yoki ← → tugmalardan foydalaning"}
+            <div className="gold-divider w-24 mx-auto mt-6" />
+            <p className="mt-6 font-serif-alt italic text-cream/70 text-lg md:text-xl">
+              Palovdan tortib chak-chakkacha — har bir taom uy ta'mi va asrlar an'anasi bilan.
             </p>
-          </motion.div>
+          </motion.header>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-          >
-            {isMobile ? <MobileMenu dishes={dishes} /> : <DesktopBook dishes={dishes} />}
-          </motion.div>
+          {/* Filter bar */}
+          <div className="sticky top-[68px] lg:top-[76px] z-30 mt-12 -mx-6 px-6 md:-mx-10 md:px-10 lg:-mx-16 lg:px-16 py-3 bg-background/85 backdrop-blur-xl border-y border-border/60">
+            <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
+              <div className="relative w-full lg:max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cream/40" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Taom qidirish…"
+                  className="w-full bg-input border border-border text-cream placeholder:text-cream/40 pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:border-accent"
+                />
+              </div>
+
+              <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1 lg:mx-0 lg:px-0 lg:flex-1">
+                <CatPill active={active === "all"} onClick={() => setActive("all")}>
+                  Barchasi
+                </CatPill>
+                {availableCats.map((c) => (
+                  <CatPill key={c} active={active === c} onClick={() => setActive(c)}>
+                    {categoryLabels[c]}
+                  </CatPill>
+                ))}
+              </div>
+
+              <div className="hidden lg:block text-[10px] tracking-[0.3em] text-cream/40 uppercase whitespace-nowrap">
+                {filtered.length} taom
+              </div>
+            </div>
+          </div>
+
+          {/* Active section description (when not "all") */}
+          {active !== "all" && (
+            <motion.div
+              key={active}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-10 text-center"
+            >
+              <h2 className="font-display text-3xl md:text-4xl text-cream">
+                {categoryLabels[active]}
+              </h2>
+              <p className="mt-2 font-serif-alt italic text-cream/60 max-w-xl mx-auto">
+                {categorySubtitle[active]}
+              </p>
+            </motion.div>
+          )}
+
+          {/* Grid */}
+          {filtered.length === 0 ? (
+            <div className="mt-20 text-center text-cream/60 border border-dashed border-border py-20">
+              Hech narsa topilmadi. Boshqa kategoriyani sinab ko'ring.
+            </div>
+          ) : (
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 auto-rows-auto">
+              {filtered.map((d, i) => (
+                <DishCard
+                  key={d.id}
+                  dish={d}
+                  size={sizeFor(i)}
+                  onOpen={() => setOpenIndex(i)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Footer note */}
+          <div className="mt-20 text-center text-cream/40 text-[10px] tracking-[0.5em] uppercase">
+            — {settings.name} —
+          </div>
         </div>
       </section>
+
+      <AnimatePresence>
+        {openIndex !== null && (
+          <Lightbox
+            dishes={filtered}
+            index={openIndex}
+            onClose={() => setOpenIndex(null)}
+            onIndex={setOpenIndex}
+          />
+        )}
+      </AnimatePresence>
     </Layout>
+  );
+}
+
+function CatPill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "shrink-0 px-4 py-2 text-[11px] tracking-[0.25em] uppercase transition-all border whitespace-nowrap",
+        active
+          ? "bg-accent text-accent-foreground border-accent"
+          : "bg-transparent text-cream/70 border-border hover:border-accent/60 hover:text-cream"
+      )}
+    >
+      {children}
+    </button>
   );
 }
