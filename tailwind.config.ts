@@ -51,8 +51,9 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        ember: "hsl(var(--ember))",
+        ruby: "hsl(var(--ruby))",
         gold: "hsl(var(--gold))",
+        "gold-deep": "hsl(var(--gold-deep))",
         cream: "hsl(var(--cream))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -67,17 +68,17 @@ export default {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) + 2px)",
+        sm: "calc(var(--radius))",
       },
       backgroundImage: {
-        "gradient-ember": "var(--gradient-ember)",
+        "gradient-gold": "var(--gradient-gold)",
         "gradient-hero": "var(--gradient-hero)",
         "gradient-dark": "var(--gradient-dark)",
-        "gradient-gold": "var(--gradient-gold)",
+        "gradient-royal": "var(--gradient-royal)",
       },
       boxShadow: {
-        ember: "var(--shadow-ember)",
+        royal: "var(--shadow-royal)",
         deep: "var(--shadow-deep)",
         gold: "var(--shadow-gold)",
       },
@@ -87,18 +88,14 @@ export default {
         "fade-in": { "0%": { opacity: "0", transform: "translateY(20px)" }, "100%": { opacity: "1", transform: "translateY(0)" } },
         "fade-in-slow": { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
         "scale-in": { "0%": { opacity: "0", transform: "scale(0.95)" }, "100%": { opacity: "1", transform: "scale(1)" } },
-        "ember-pulse": {
-          "0%,100%": { opacity: "0.7", transform: "scale(1)" },
-          "50%": { opacity: "1", transform: "scale(1.06)" },
-        },
         "scroll-down": {
           "0%": { transform: "translateY(0)", opacity: "0" },
           "30%": { opacity: "1" },
           "100%": { transform: "translateY(12px)", opacity: "0" },
         },
-        flicker: {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.85" },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
         },
       },
       animation: {
@@ -107,9 +104,8 @@ export default {
         "fade-in": "fade-in 0.7s ease-out forwards",
         "fade-in-slow": "fade-in-slow 1.4s ease-out forwards",
         "scale-in": "scale-in 0.4s ease-out forwards",
-        "ember-pulse": "ember-pulse 3s ease-in-out infinite",
         "scroll-down": "scroll-down 1.8s ease-in-out infinite",
-        flicker: "flicker 4s ease-in-out infinite",
+        shimmer: "shimmer 6s linear infinite",
       },
     },
   },

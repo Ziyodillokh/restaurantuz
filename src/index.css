@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,92 +6,81 @@
 
 @layer base {
   :root {
-    /* Kuddus Steak — Premium dark steakhouse palette (HSL) */
-    --background: 0 0% 4%;              /* charcoal black #0A0A0A */
-    --foreground: 36 33% 94%;           /* cream #F5F1EA */
+    /* Imron Restoran — Royal black, gold & ruby (HSL) */
+    --background: 0 0% 4%;              /* deep black #0A0A0A */
+    --foreground: 42 38% 90%;           /* warm cream */
 
     --card: 0 0% 7%;
-    --card-foreground: 36 33% 94%;
+    --card-foreground: 42 38% 90%;
 
     --popover: 0 0% 6%;
-    --popover-foreground: 36 33% 94%;
+    --popover-foreground: 42 38% 90%;
 
-    --primary: 351 86% 42%;             /* steak red #C8102E */
-    --primary-foreground: 36 33% 94%;
+    /* Ruby/magenta from the crown jewels */
+    --primary: 333 70% 42%;             /* royal ruby ~#B11A66 */
+    --primary-foreground: 42 50% 95%;
 
     --secondary: 0 0% 10%;
-    --secondary-foreground: 36 33% 94%;
+    --secondary-foreground: 42 38% 90%;
 
     --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 55%;       /* ash #8B8B8B */
+    --muted-foreground: 0 0% 55%;
 
-    --accent: 38 39% 60%;               /* gold #C9A96E */
+    /* Champagne gold from the IMRON wordmark */
+    --accent: 42 60% 70%;               /* #E8C97B */
     --accent-foreground: 0 0% 4%;
 
-    --ember: 355 76% 56%;               /* ember #E63946 */
-    --gold: 38 39% 60%;
-    --cream: 36 33% 94%;
+    --ruby: 333 75% 50%;
+    --gold: 42 60% 70%;
+    --gold-deep: 38 55% 50%;
+    --cream: 42 50% 95%;
 
-    --destructive: 0 84% 50%;
-    --destructive-foreground: 36 33% 94%;
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 42 50% 95%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 12%;
-    --ring: 351 86% 42%;
+    --border: 42 25% 18%;
+    --input: 0 0% 10%;
+    --ring: 42 60% 60%;
 
-    --radius: 0.25rem;
+    --radius: 0.125rem;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(180deg, hsl(0 0% 0% / 0.3) 0%, hsl(0 0% 0% / 0.85) 100%);
-    --gradient-ember: linear-gradient(135deg, hsl(351 86% 42%), hsl(355 76% 56%));
-    --gradient-dark: linear-gradient(180deg, hsl(0 0% 4%), hsl(0 0% 7%));
-    --gradient-gold: linear-gradient(135deg, hsl(38 39% 60%), hsl(38 50% 75%));
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 0% / 0.35) 0%, hsl(0 0% 0% / 0.92) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(38 55% 50%) 0%, hsl(42 70% 78%) 50%, hsl(38 55% 48%) 100%);
+    --gradient-royal: linear-gradient(135deg, hsl(333 75% 35%), hsl(333 70% 50%));
+    --gradient-dark: linear-gradient(180deg, hsl(0 0% 4%), hsl(0 0% 8%));
 
     /* Shadows */
-    --shadow-ember: 0 20px 60px -20px hsl(351 86% 42% / 0.5);
-    --shadow-deep: 0 30px 80px -20px hsl(0 0% 0% / 0.8);
-    --shadow-gold: 0 0 40px hsl(38 39% 60% / 0.3);
+    --shadow-royal: 0 24px 60px -20px hsl(333 75% 30% / 0.55);
+    --shadow-deep: 0 30px 80px -24px hsl(0 0% 0% / 0.85);
+    --shadow-gold: 0 0 50px hsl(42 60% 60% / 0.28);
 
     /* Sidebar (admin) */
     --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 36 33% 94%;
-    --sidebar-primary: 351 86% 42%;
-    --sidebar-primary-foreground: 36 33% 94%;
+    --sidebar-foreground: 42 38% 90%;
+    --sidebar-primary: 42 60% 70%;
+    --sidebar-primary-foreground: 0 0% 4%;
     --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 36 33% 94%;
-    --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 351 86% 42%;
-  }
-
-  .dark {
-    /* same — site is always dark */
+    --sidebar-accent-foreground: 42 38% 90%;
+    --sidebar-border: 42 20% 14%;
+    --sidebar-ring: 42 60% 60%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; }
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "ss01", "cv11";
   }
+  ::selection { background: hsl(var(--accent)); color: hsl(var(--background)); }
 
-  ::selection {
-    background: hsl(var(--primary));
-    color: hsl(var(--cream));
-  }
-
-  /* Custom scrollbar */
+  /* Custom scrollbar — gold */
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: hsl(0 0% 6%); }
-  ::-webkit-scrollbar-thumb { background: hsl(var(--primary) / 0.6); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary)); }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--gold-deep) / 0.55); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--accent)); }
 }
 
 @layer utilities {
@@ -100,12 +89,8 @@
   .font-accent { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; }
   .font-sans { font-family: 'Inter', system-ui, sans-serif; }
 
-  .text-gradient-ember {
-    background: var(--gradient-ember);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
+  .text-gold { color: hsl(var(--accent)); }
+  .text-ruby { color: hsl(var(--primary)); }
 
   .text-gradient-gold {
     background: var(--gradient-gold);
@@ -113,127 +98,75 @@
     background-clip: text;
     color: transparent;
   }
+  .text-gradient-royal {
+    background: var(--gradient-royal);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 
   .glass-dark {
-    background: hsl(0 0% 6% / 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsl(0 0% 100% / 0.06);
+    background: hsl(0 0% 5% / 0.72);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid hsl(var(--accent) / 0.12);
   }
 
-  .ember-glow {
-    box-shadow: var(--shadow-ember);
-  }
+  .royal-glow { box-shadow: var(--shadow-royal); }
+  .gold-glow  { box-shadow: var(--shadow-gold); }
 
   .gold-divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, hsl(var(--gold)), transparent);
+    background: linear-gradient(90deg, transparent, hsl(var(--accent) / 0.85), transparent);
   }
 
-  /* ─── Premium menu book textures ─── */
-  .texture-paper {
-    background-color: hsl(36 30% 92%);
-    background-image:
-      radial-gradient(hsl(28 35% 70% / 0.18) 1px, transparent 1.4px),
-      radial-gradient(hsl(28 40% 55% / 0.08) 1px, transparent 1px),
-      radial-gradient(ellipse at 30% 20%, hsl(36 40% 96%) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 90%, hsl(28 35% 80%) 0%, transparent 70%),
-      linear-gradient(180deg, hsl(36 35% 93%), hsl(30 28% 84%));
-    background-size: 5px 5px, 11px 11px, 100% 100%, 100% 100%, 100% 100%;
-  }
-
-  .texture-paper-aged {
-    background-color: hsl(34 32% 88%);
-    background-image:
-      radial-gradient(hsl(28 45% 50% / 0.12) 1px, transparent 1.4px),
-      radial-gradient(ellipse at 20% 10%, hsl(36 50% 96% / 0.9) 0%, transparent 50%),
-      radial-gradient(ellipse at 90% 80%, hsl(20 50% 55% / 0.18) 0%, transparent 60%),
-      radial-gradient(ellipse at 50% 50%, transparent 40%, hsl(25 40% 30% / 0.15) 100%),
-      linear-gradient(180deg, hsl(34 32% 90%), hsl(28 28% 80%));
-    background-size: 6px 6px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-  }
-
-  .texture-leather {
-    background-color: hsl(15 35% 10%);
-    background-image:
-      radial-gradient(hsl(20 50% 22% / 0.55) 1.4px, transparent 1.6px),
-      radial-gradient(hsl(15 45% 8% / 0.6) 1px, transparent 1.2px),
-      radial-gradient(ellipse at 30% 20%, hsl(20 50% 22%) 0%, transparent 55%),
-      radial-gradient(ellipse at 75% 80%, hsl(15 60% 6%) 0%, transparent 65%),
-      linear-gradient(135deg, hsl(18 35% 13%), hsl(12 40% 7%));
-    background-size: 7px 7px, 4px 4px, 100% 100%, 100% 100%, 100% 100%;
-  }
-
-  .leather-frame {
-    border: 2px solid hsl(38 55% 55%);
-    box-shadow:
-      inset 0 0 0 1px hsl(38 60% 40% / 0.5),
-      inset 0 0 30px hsl(20 40% 5% / 0.6),
-      0 0 60px hsl(38 50% 30% / 0.2);
-  }
-
-  /* Page edges — gives that "stack of pages" feel */
-  .book-edge-right {
-    box-shadow:
-      inset -28px 0 36px -24px hsl(20 40% 8% / 0.55),
-      inset -1px 0 0 hsl(28 25% 65% / 0.4),
-      inset -3px 0 0 hsl(36 32% 88% / 0.6),
-      inset -5px 0 0 hsl(28 25% 70% / 0.4),
-      inset -7px 0 0 hsl(36 32% 86% / 0.5);
-  }
-  .book-edge-left {
-    box-shadow:
-      inset 28px 0 36px -24px hsl(20 40% 8% / 0.55),
-      inset 1px 0 0 hsl(28 25% 65% / 0.4),
-      inset 3px 0 0 hsl(36 32% 88% / 0.6),
-      inset 5px 0 0 hsl(28 25% 70% / 0.4),
-      inset 7px 0 0 hsl(36 32% 86% / 0.5);
-  }
-
-  /* Decorative ornament dividers */
-  .ornament {
-    background-image:
-      linear-gradient(90deg, transparent, hsl(38 45% 40% / 0.7) 50%, transparent);
-    height: 1px;
+  /* Hairline gold border with double-line royal frame */
+  .royal-frame {
     position: relative;
+    border: 1px solid hsl(var(--accent) / 0.55);
+    box-shadow: inset 0 0 0 4px hsl(0 0% 0%), inset 0 0 0 5px hsl(var(--accent) / 0.25);
   }
-  .ornament::before {
-    content: "❦";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: hsl(36 30% 92%);
-    color: hsl(38 50% 38%);
-    padding: 0 12px;
-    font-size: 14px;
-  }
-  .ornament-aged::before { background: hsl(34 32% 88%); }
 
   .gold-foil {
     background: linear-gradient(135deg,
-      hsl(38 60% 45%) 0%,
-      hsl(45 75% 70%) 25%,
-      hsl(38 60% 50%) 50%,
-      hsl(45 80% 75%) 75%,
+      hsl(38 55% 45%) 0%,
+      hsl(45 75% 78%) 28%,
+      hsl(38 60% 55%) 50%,
+      hsl(45 80% 80%) 72%,
       hsl(38 55% 42%) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    text-shadow: 0 1px 0 hsl(20 40% 10% / 0.3);
   }
 
-  .price-tag {
-    font-family: 'Bebas Neue', sans-serif;
-    letter-spacing: 0.08em;
-    color: hsl(351 70% 35%);
+  /* Subtle damask-like radial pattern for premium sections */
+  .pattern-royal {
+    background-color: hsl(0 0% 5%);
+    background-image:
+      radial-gradient(hsl(var(--accent) / 0.06) 1px, transparent 1.4px),
+      radial-gradient(ellipse at top, hsl(var(--primary) / 0.08), transparent 60%);
+    background-size: 22px 22px, 100% 100%;
   }
 
-  /* Hide scrollbar utility */
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 @layer components {
   .container-px { @apply px-6 md:px-10 lg:px-16; }
+
+  /* Hairline animated underline */
+  .link-underline {
+    position: relative;
+  }
+  .link-underline::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -4px;
+    height: 1px; width: 0;
+    background: hsl(var(--accent));
+    transition: width 350ms ease;
+  }
+  .link-underline:hover::after,
+  .link-underline.is-active::after { width: 100%; }
 }
