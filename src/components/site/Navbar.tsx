@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Flame } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/lib/store";
+import Brandmark from "./Brandmark";
 
 const links = [
   { to: "/", label: "Bosh sahifa" },
@@ -18,9 +19,6 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const loc = useLocation();
   const settings = useSettings();
-  const brand = settings.name.split(" ");
-  const brandFirst = brand[0] || "ZIYODULLO";
-  const brandRest = brand.slice(1).join(" ") || "RESTAURANT";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
@@ -36,19 +34,17 @@ export default function Navbar() {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         scrolled || loc.pathname !== "/"
-          ? "bg-background/85 backdrop-blur-xl border-b border-border/60 py-3"
+          ? "bg-background/90 backdrop-blur-xl border-b border-accent/15 py-3"
           : "bg-transparent py-5"
       )}
     >
-      <div className="container-px max-w-[1400px] mx-auto flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
-          <Flame className="h-6 w-6 text-primary group-hover:animate-flicker" />
-          <div className="leading-none">
-            <div className="font-display text-xl tracking-wider text-cream uppercase">
-              {brandFirst}
-              <span className="text-primary"> {brandRest}</span>
+      <div className="container-px max-w-[1500px] mx-auto flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-3 group">
+          <Brandmark variant="compact" className="group-hover:opacity-90 transition-opacity" />
+          <div className="hidden sm:block leading-none">
+            <div className="text-[9px] tracking-[0.45em] text-accent/80 mt-0.5 uppercase">
+              {settings.tagline.split(".")[0]}
             </div>
-            <div className="text-[9px] tracking-[0.3em] text-gold mt-0.5">EST · 2014</div>
           </div>
         </Link>
 
@@ -60,17 +56,11 @@ export default function Navbar() {
                 key={l.to}
                 to={l.to}
                 className={cn(
-                  "text-sm tracking-wide uppercase transition-colors relative",
-                  active ? "text-primary" : "text-cream/80 hover:text-cream"
+                  "link-underline text-[12px] tracking-[0.3em] uppercase transition-colors",
+                  active ? "text-accent is-active" : "text-cream/85 hover:text-cream"
                 )}
               >
                 {l.label}
-                <span
-                  className={cn(
-                    "absolute -bottom-1.5 left-0 h-px bg-primary transition-all duration-300",
-                    active ? "w-full" : "w-0"
-                  )}
-                />
               </Link>
             );
           })}
@@ -78,7 +68,7 @@ export default function Navbar() {
 
         <Link
           to="/bron"
-          className="hidden lg:inline-flex items-center px-5 py-2.5 text-xs uppercase tracking-[0.2em] bg-primary text-cream hover:bg-ember transition-all hover:shadow-ember"
+          className="hidden lg:inline-flex items-center px-5 py-2.5 text-[11px] uppercase tracking-[0.3em] bg-accent text-accent-foreground hover:bg-cream transition-all"
         >
           Stol Band Qilish
         </Link>
@@ -95,25 +85,34 @@ export default function Navbar() {
       {/* Mobile slide-in */}
       <div
         className={cn(
-          "lg:hidden fixed inset-y-0 left-0 w-[80%] max-w-sm bg-background border-r border-border z-40 transition-transform duration-500",
+          "lg:hidden fixed inset-y-0 left-0 w-[82%] max-w-sm bg-background border-r border-accent/15 z-40 transition-transform duration-500",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="pt-24 px-8 flex flex-col gap-6">
+        <div className="pt-10 px-8">
+          <Brandmark />
+        </div>
+        <div className="mt-8 px-8 flex flex-col gap-5">
           {links.map((l) => (
             <Link
               key={l.to}
               to={l.to}
-              className="font-display text-2xl text-cream hover:text-primary transition-colors"
+              className="font-display text-2xl text-cream hover:text-accent transition-colors"
             >
               {l.label}
             </Link>
           ))}
           <div className="gold-divider my-4" />
-          <Link to="/bron" className="bg-primary text-cream py-3 text-center uppercase tracking-widest text-sm">
+          <Link
+            to="/bron"
+            className="bg-accent text-accent-foreground py-3 text-center uppercase tracking-[0.3em] text-xs"
+          >
             Stol band qilish
           </Link>
-          <a href={`tel:${settings.phone.replace(/\s/g, "")}`} className="text-gold text-sm tracking-wider">
+          <a
+            href={`tel:${settings.phone.replace(/\s/g, "")}`}
+            className="text-accent text-sm tracking-[0.2em]"
+          >
             {settings.phone}
           </a>
         </div>
