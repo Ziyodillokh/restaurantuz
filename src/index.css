@@ -150,6 +150,18 @@
 
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Circular medallion behind the brand mark */
+  .logo-medallion {
+    background:
+      radial-gradient(circle at 50% 45%, hsl(0 0% 8%) 0%, hsl(0 0% 4%) 70%);
+    border: 1px solid hsl(var(--accent) / 0.45);
+    box-shadow:
+      inset 0 0 0 6px hsl(0 0% 0%),
+      inset 0 0 0 7px hsl(var(--accent) / 0.25),
+      0 18px 50px -18px hsl(0 0% 0% / 0.8),
+      0 0 60px -10px hsl(var(--accent) / 0.18);
+  }
 }
 
 @layer components {
