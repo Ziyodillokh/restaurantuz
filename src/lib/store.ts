@@ -55,19 +55,19 @@ const TABLES_KEY = "zr.v2.tables";
 const DATA_EVENT = "zr:data";
 
 const defaultSettings: SiteSettings = {
-  name: "Ziyodullo Restaurant",
-  tagline: "Olovda tug'ilgan ta'm. Har bir bo'lak — san'at asari.",
+  name: "Imron Restoran",
+  tagline: "Asrlar an'anasi, qirol dasturxoni. Har bir taom — uy ta'mi.",
   phone: "+998 71 200 14 14",
-  email: "info@ziyodullo-restaurant.uz",
+  email: "info@imron-restoran.uz",
   address: "Toshkent, Amir Temur 107",
-  hours: "Har kuni 11:00 — 00:00",
-  instagram: "https://instagram.com/ziyodullo.restaurant",
-  telegram: "https://t.me/ziyodullo_restaurant",
+  hours: "Har kuni 10:00 — 23:30",
+  instagram: "https://instagram.com/imron.restoran",
+  telegram: "https://t.me/imron_restoran",
   heroPoster:
-    "https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=1600&q=80",
-  heroTitle: "Olovda Tug'ilgan Ta'm",
+    "https://images.unsplash.com/photo-1631292784640-2b24be784d5d?auto=format&fit=crop&w=1600&q=80",
+  heroTitle: "Qirollik dasturxoni",
   heroSubtitle:
-    "O'zbekistondagi eng yaxshi premium steyklar. Har bir bo'lak — san'at asari.",
+    "Palov, kabob, manti va asrlar davomida sayqallangan o'zbek taomlari — Imron Restoran qirollik mehmondo'stligi bilan.",
 };
 
 function emit() {
