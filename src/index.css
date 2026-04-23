@@ -26,13 +26,13 @@
     --muted: 0 0% 12%;
     --muted-foreground: 0 0% 55%;
 
-    /* Champagne gold from the IMRON wordmark */
-    --accent: 42 60% 70%;               /* #E8C97B */
+    /* Antique gold from the IMRON wordmark — deeper, richer, less yellow */
+    --accent: 38 52% 55%;               /* antique gold ~#B89259 */
     --accent-foreground: 0 0% 4%;
 
     --ruby: 333 75% 50%;
-    --gold: 42 60% 70%;
-    --gold-deep: 38 55% 50%;
+    --gold: 38 52% 55%;
+    --gold-deep: 35 60% 38%;            /* burnished bronze */
     --cream: 42 50% 95%;
 
     --destructive: 0 75% 50%;
@@ -40,13 +40,13 @@
 
     --border: 42 25% 18%;
     --input: 0 0% 10%;
-    --ring: 42 60% 60%;
+    --ring: 38 52% 50%;
 
     --radius: 0.125rem;
 
     /* Gradients */
     --gradient-hero: linear-gradient(180deg, hsl(0 0% 0% / 0.35) 0%, hsl(0 0% 0% / 0.92) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(38 55% 50%) 0%, hsl(42 70% 78%) 50%, hsl(38 55% 48%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(35 60% 35%) 0%, hsl(40 65% 65%) 50%, hsl(35 60% 35%) 100%);
     --gradient-royal: linear-gradient(135deg, hsl(333 75% 35%), hsl(333 70% 50%));
     --gradient-dark: linear-gradient(180deg, hsl(0 0% 4%), hsl(0 0% 8%));
 
@@ -58,12 +58,12 @@
     /* Sidebar (admin) */
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 42 38% 90%;
-    --sidebar-primary: 42 60% 70%;
+    --sidebar-primary: 38 52% 55%;
     --sidebar-primary-foreground: 0 0% 4%;
     --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 42 38% 90%;
-    --sidebar-border: 42 20% 14%;
-    --sidebar-ring: 42 60% 60%;
+    --sidebar-border: 38 25% 14%;
+    --sidebar-ring: 38 52% 50%;
   }
 }
 
@@ -150,6 +150,18 @@
 
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Circular medallion behind the brand mark */
+  .logo-medallion {
+    background:
+      radial-gradient(circle at 50% 45%, hsl(0 0% 8%) 0%, hsl(0 0% 4%) 70%);
+    border: 1px solid hsl(var(--accent) / 0.45);
+    box-shadow:
+      inset 0 0 0 6px hsl(0 0% 0%),
+      inset 0 0 0 7px hsl(var(--accent) / 0.25),
+      0 18px 50px -18px hsl(0 0% 0% / 0.8),
+      0 0 60px -10px hsl(var(--accent) / 0.18);
+  }
 }
 
 @layer components {

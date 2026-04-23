@@ -11,18 +11,13 @@ const team = [
 export default function AboutPage() {
   return (
     <Layout>
-      <section className="relative h-[60vh] min-h-[420px] overflow-hidden">
-        <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1600&q=80" alt="" className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
-        <div className="absolute inset-0 grid place-items-center text-center container-px">
-          <div>
-            <div className="text-gold text-xs tracking-[0.4em] mb-4">— BIZ HAQIMIZDA</div>
-            <h1 className="font-display text-5xl md:text-7xl text-cream">
-              Olov ortida{" "}
-              <span className="italic text-gradient-ember">tarix</span>
-            </h1>
-          </div>
-        </div>
+      <section className="relative pt-36 pb-12 text-center container-px">
+        <div className="text-accent text-xs tracking-[0.5em] mb-4 uppercase">— Biz haqimizda</div>
+        <h1 className="font-display text-5xl md:text-7xl text-cream leading-tight">
+          Asrlar an'anasi,{" "}
+          <span className="italic text-gradient-gold">qirol dasturxoni</span>
+        </h1>
+        <div className="gold-divider w-24 mx-auto mt-6" />
       </section>
 
       <About />
@@ -31,7 +26,7 @@ export default function AboutPage() {
         <div className="container-px max-w-[1400px] mx-auto">
           <div className="text-center mb-14">
             <div className="text-gold text-xs tracking-[0.4em] mb-4">— BIZNING JAMOA</div>
-            <h2 className="font-display text-4xl md:text-5xl text-cream">Olov ortidagi <span className="italic text-gradient-ember">san'atkorlar</span></h2>
+            <h2 className="font-display text-4xl md:text-5xl text-cream">Olov ortidagi <span className="italic text-gradient-gold">san'atkorlar</span></h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {team.map((m, i) => (

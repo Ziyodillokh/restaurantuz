@@ -54,18 +54,19 @@ export default function About() {
           transition={{ duration: 0.9 }}
           className="relative"
         >
-          <div className="relative aspect-[4/5] overflow-hidden royal-frame">
-            <img
-              src="https://images.unsplash.com/photo-1631292784640-2b24be784d5d?auto=format&fit=crop&w=1200&q=80"
-              alt="An'anaviy o'zbek palovi"
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
-          </div>
-          <div className="absolute -bottom-6 -right-6 hidden md:block bg-accent text-accent-foreground px-6 py-4 royal-glow">
-            <div className="font-accent text-3xl leading-none">SINCE</div>
-            <div className="text-[10px] tracking-[0.3em] mt-1">DASTURXON USTASI</div>
+          <div className="relative aspect-[4/5] overflow-hidden royal-frame group">
+            {/* Owner can drop /public/restoran-video.mp4 to replace this. Poster shows until video loads / if missing. */}
+            <video
+              className="absolute inset-0 h-full w-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster="https://images.unsplash.com/photo-1631292784640-2b24be784d5d?auto=format&fit=crop&w=1600&q=80"
+            >
+              <source src="/restoran-video.mp4" type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent pointer-events-none" />
           </div>
         </motion.div>
 

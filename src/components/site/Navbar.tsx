@@ -39,13 +39,8 @@ export default function Navbar() {
       )}
     >
       <div className="container-px max-w-[1500px] mx-auto flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3 group">
-          <Brandmark variant="compact" className="group-hover:opacity-90 transition-opacity" />
-          <div className="hidden sm:block leading-none">
-            <div className="text-[9px] tracking-[0.45em] text-accent/80 mt-0.5 uppercase">
-              {settings.tagline.split(".")[0]}
-            </div>
-          </div>
+        <Link to="/" className="flex items-center group">
+          <Brandmark variant="compact" className="h-11 md:h-12 group-hover:opacity-90 transition-opacity" />
         </Link>
 
         <nav className="hidden lg:flex items-center gap-8">
@@ -68,7 +63,7 @@ export default function Navbar() {
 
         <Link
           to="/bron"
-          className="hidden lg:inline-flex items-center px-5 py-2.5 text-[11px] uppercase tracking-[0.3em] bg-accent text-accent-foreground hover:bg-cream transition-all"
+          className="hidden lg:inline-flex items-center px-5 py-2.5 text-[11px] uppercase tracking-[0.3em] bg-gradient-to-b from-[hsl(35_60%_38%)] to-[hsl(35_55%_28%)] text-cream border border-accent/40 hover:from-accent hover:to-[hsl(35_60%_38%)] transition-all"
         >
           Stol Band Qilish
         </Link>
@@ -105,7 +100,7 @@ export default function Navbar() {
           <div className="gold-divider my-4" />
           <Link
             to="/bron"
-            className="bg-accent text-accent-foreground py-3 text-center uppercase tracking-[0.3em] text-xs"
+            className="bg-gradient-to-b from-[hsl(35_60%_38%)] to-[hsl(35_55%_28%)] text-cream border border-accent/40 py-3 text-center uppercase tracking-[0.3em] text-xs"
           >
             Stol band qilish
           </Link>

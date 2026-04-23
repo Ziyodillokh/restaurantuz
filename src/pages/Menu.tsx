@@ -329,8 +329,8 @@ export default function MenuPage() {
             </p>
           </motion.header>
 
-          {/* Filter bar */}
-          <div className="sticky top-[68px] lg:top-[76px] z-30 mt-12 -mx-6 px-6 md:-mx-10 md:px-10 lg:-mx-16 lg:px-16 py-3 bg-background/85 backdrop-blur-xl border-y border-border/60">
+          {/* Filter bar — sticky on all screens, prominent on mobile */}
+          <div className="sticky top-[64px] lg:top-[80px] z-30 mt-10 md:mt-12 -mx-6 px-6 md:-mx-10 md:px-10 lg:-mx-16 lg:px-16 py-3 md:py-4 bg-background/92 backdrop-blur-xl border-y border-accent/15">
             <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
               <div className="relative w-full lg:max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cream/40" />
@@ -338,19 +338,22 @@ export default function MenuPage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Taom qidirish…"
-                  className="w-full bg-input border border-border text-cream placeholder:text-cream/40 pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:border-accent"
+                  className="w-full bg-input border border-border text-cream placeholder:text-cream/40 pl-10 pr-3 py-3 lg:py-2.5 text-sm focus:outline-none focus:border-accent rounded-none"
                 />
               </div>
 
-              <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1 lg:mx-0 lg:px-0 lg:flex-1">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-6 px-6 md:-mx-10 md:px-10 lg:mx-0 lg:px-0 lg:flex-1 snap-x snap-mandatory">
                 <CatPill active={active === "all"} onClick={() => setActive("all")}>
-                  Barchasi
+                  Barchasi · {dishes.length}
                 </CatPill>
-                {availableCats.map((c) => (
-                  <CatPill key={c} active={active === c} onClick={() => setActive(c)}>
-                    {categoryLabels[c]}
-                  </CatPill>
-                ))}
+                {availableCats.map((c) => {
+                  const count = dishes.filter((d) => d.category === c).length;
+                  return (
+                    <CatPill key={c} active={active === c} onClick={() => setActive(c)}>
+                      {categoryLabels[c]} · {count}
+                    </CatPill>
+                  );
+                })}
               </div>
 
               <div className="hidden lg:block text-[10px] tracking-[0.3em] text-cream/40 uppercase whitespace-nowrap">
@@ -370,9 +373,12 @@ export default function MenuPage() {
               <h2 className="font-display text-3xl md:text-4xl text-cream">
                 {categoryLabels[active]}
               </h2>
-              <p className="mt-2 font-serif-alt italic text-cream/60 max-w-xl mx-auto">
+              <p className="mt-2 font-serif-alt italic text-cream/60 max-w-xl mx-auto px-6">
                 {categorySubtitle[active]}
               </p>
+              <div className="md:hidden mt-3 text-[10px] tracking-[0.4em] text-accent uppercase">
+                {filtered.length} taom
+              </div>
             </motion.div>
           )}
 
@@ -382,7 +388,7 @@ export default function MenuPage() {
               Hech narsa topilmadi. Boshqa kategoriyani sinab ko'ring.
             </div>
           ) : (
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 auto-rows-auto">
+            <div className="mt-8 md:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 auto-rows-auto">
               {filtered.map((d, i) => (
                 <DishCard
                   key={d.id}
@@ -428,10 +434,10 @@ function CatPill({
     <button
       onClick={onClick}
       className={cn(
-        "shrink-0 px-4 py-2 text-[11px] tracking-[0.25em] uppercase transition-all border whitespace-nowrap",
+        "snap-start shrink-0 px-4 md:px-5 py-2.5 md:py-2 text-[11px] tracking-[0.25em] uppercase transition-all border whitespace-nowrap",
         active
-          ? "bg-accent text-accent-foreground border-accent"
-          : "bg-transparent text-cream/70 border-border hover:border-accent/60 hover:text-cream"
+          ? "bg-gradient-to-b from-[hsl(35_60%_38%)] to-[hsl(35_55%_28%)] text-cream border-accent shadow-[0_4px_18px_-6px_hsl(var(--accent)/0.4)]"
+          : "bg-card/40 text-cream/70 border-border hover:border-accent/60 hover:text-cream"
       )}
     >
       {children}
