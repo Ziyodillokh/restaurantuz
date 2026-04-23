@@ -434,10 +434,10 @@ function CatPill({
     <button
       onClick={onClick}
       className={cn(
-        "shrink-0 px-4 py-2 text-[11px] tracking-[0.25em] uppercase transition-all border whitespace-nowrap",
+        "snap-start shrink-0 px-4 md:px-5 py-2.5 md:py-2 text-[11px] tracking-[0.25em] uppercase transition-all border whitespace-nowrap",
         active
-          ? "bg-accent text-accent-foreground border-accent"
-          : "bg-transparent text-cream/70 border-border hover:border-accent/60 hover:text-cream"
+          ? "bg-gradient-to-b from-[hsl(35_60%_38%)] to-[hsl(35_55%_28%)] text-cream border-accent shadow-[0_4px_18px_-6px_hsl(var(--accent)/0.4)]"
+          : "bg-card/40 text-cream/70 border-border hover:border-accent/60 hover:text-cream"
       )}
     >
       {children}
