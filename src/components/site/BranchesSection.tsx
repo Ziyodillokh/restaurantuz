@@ -12,7 +12,7 @@ export default function BranchesSection() {
         <div className="text-center mb-16">
           <div className="text-gold text-xs tracking-[0.4em] mb-4">— FILIALLARIMIZ</div>
           <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-cream">
-            Bizni <span className="italic text-gradient-ember">toping</span>
+            Bizni <span className="italic text-gradient-gold">toping</span>
           </h2>
           <div className="gold-divider w-24 mx-auto mt-6" />
         </div>

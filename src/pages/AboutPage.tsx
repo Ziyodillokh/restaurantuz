@@ -26,7 +26,7 @@ export default function AboutPage() {
         <div className="container-px max-w-[1400px] mx-auto">
           <div className="text-center mb-14">
             <div className="text-gold text-xs tracking-[0.4em] mb-4">— BIZNING JAMOA</div>
-            <h2 className="font-display text-4xl md:text-5xl text-cream">Olov ortidagi <span className="italic text-gradient-ember">san'atkorlar</span></h2>
+            <h2 className="font-display text-4xl md:text-5xl text-cream">Olov ortidagi <span className="italic text-gradient-gold">san'atkorlar</span></h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {team.map((m, i) => (

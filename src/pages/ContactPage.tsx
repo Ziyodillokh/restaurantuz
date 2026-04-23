@@ -24,7 +24,7 @@ export default function ContactPage() {
           <div className="text-center mb-16">
             <div className="text-gold text-xs tracking-[0.4em] mb-4">— ALOQA</div>
             <h1 className="font-display text-5xl md:text-6xl text-cream">
-              Biz bilan <span className="italic text-gradient-ember">bog'laning</span>
+              Biz bilan <span className="italic text-gradient-gold">bog'laning</span>
             </h1>
           </div>
 
