@@ -10,7 +10,7 @@ export default function Footer() {
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-gold" />
       <div className="container-px max-w-[1500px] mx-auto py-16 grid md:grid-cols-2 lg:grid-cols-4 gap-12">
         <div>
-          <Brandmark />
+          <Brandmark variant="medallion" className="h-28 w-28 md:h-32 md:w-32" />
           <p className="mt-5 text-sm font-serif-alt italic text-cream/60 max-w-[280px]">
             "{s.tagline}"
           </p>

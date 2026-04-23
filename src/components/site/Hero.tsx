@@ -37,11 +37,11 @@ export default function Hero() {
 
       <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
         <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.15 }}
+          initial={{ opacity: 0, y: 18, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 1.1, delay: 0.15 }}
         >
-          <Brandmark className="h-16 md:h-20 mx-auto" />
+          <Brandmark variant="medallion" />
         </motion.div>
 
         <motion.div
