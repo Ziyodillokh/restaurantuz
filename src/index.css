@@ -26,13 +26,13 @@
     --muted: 0 0% 12%;
     --muted-foreground: 0 0% 55%;
 
-    /* Champagne gold from the IMRON wordmark */
-    --accent: 42 60% 70%;               /* #E8C97B */
+    /* Antique gold from the IMRON wordmark — deeper, richer, less yellow */
+    --accent: 38 52% 55%;               /* antique gold ~#B89259 */
     --accent-foreground: 0 0% 4%;
 
     --ruby: 333 75% 50%;
-    --gold: 42 60% 70%;
-    --gold-deep: 38 55% 50%;
+    --gold: 38 52% 55%;
+    --gold-deep: 35 60% 38%;            /* burnished bronze */
     --cream: 42 50% 95%;
 
     --destructive: 0 75% 50%;
